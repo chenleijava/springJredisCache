@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <!--控制台-->
+    <appender name="Console" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="[%d] %m%n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="debug" />
+            <param name="levelMax" value="error" />
+            <param name="AcceptOnMatch" value="true" />
+        </filter>
+    </appender>
+
+    <!--指定日志模块输出到指定位置  appender  logger-->
+    <appender name="log_all" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="./log/all/log.log" />
+        <param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"  value="[%d] %m%n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="debug" />
+            <param name="levelMax" value="error" />
+            <param name="AcceptOnMatch" value="true" />
+        </filter>
+    </appender>
+
+
+    <logger name="com.commons.logger.DBPool_log" additivity="false">
+        <level value="debug"/>
+        <appender-ref ref="Console"/>
+    </logger>
+
+    <!-- 根logger的设置-->
+    <root>
+        <priority value ="debug"/>
+        <appender-ref ref="Console" />
+        <!--<appender-ref ref="log_all"/>-->
+    </root>
+</log4j:configuration>

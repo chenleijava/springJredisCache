@@ -22,7 +22,9 @@ public class Test {
     @Resource
     private JRedisCache jRedisCache;
 
-    public static void main(String[]args){
+
+    @org.junit.Test
+    public void  testJRedis(){
         DOMConfigurator.configure("res/appConfig/log4j.xml");
 
         System.setProperty("java.net.preferIPv4Stack", "true"); //Disable IPv6 in JVM
@@ -41,9 +43,9 @@ public class Test {
         list= (ArrayList<Integer>) test.jRedisCache.getList("list");
 
         for(int value:list){
-            System.out.println("get value from redis:"+value);
+            System.out.println("get value from redis:" + value);
         }
-
     }
+
 
 }

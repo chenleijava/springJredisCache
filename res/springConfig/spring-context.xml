@@ -8,15 +8,15 @@
 
 
     <!--log4j config-->
-    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" >
-        <property name="targetClass" value="org.springframework.util.Log4jConfigurer" />
-        <property name="targetMethod" value="initLogging" />
-        <property name="arguments">
-            <list>
-                <value>file:res/gameConfig/log4j.properties</value>
-            </list>
-        </property>
-    </bean>
+    <!--<bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" >-->
+        <!--<property name="targetClass" value="org.springframework.util.Log4jConfigurer" />-->
+        <!--<property name="targetMethod" value="initLogging" />-->
+        <!--<property name="arguments">-->
+            <!--<list>-->
+                <!--<value>file:res/gameConfig/log4j.properties</value>-->
+            <!--</list>-->
+        <!--</property>-->
+    <!--</bean>-->
 
     <context:component-scan base-package="testJRedis"/>
     <context:component-scan base-package="springJredisCache"/>

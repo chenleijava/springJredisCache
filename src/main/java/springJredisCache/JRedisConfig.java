@@ -14,7 +14,7 @@ import org.apache.commons.pool.impl.GenericObjectPool;
  *         dcserver1.3 </br>
  *         Date:14-1-9 </br>
  *         Time:下午2:50 </br>
- *         Package:{@link com.dc.gameserver.extComponents.springJredisCache}</br>
+ *         Package:{@link springJredisCache}</br>
  *         Comment： 对象池参数设置
  */
 public class JRedisConfig extends GenericObjectPool.Config {

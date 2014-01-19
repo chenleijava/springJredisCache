@@ -29,7 +29,6 @@ import java.util.Set;
 @Service
 public class JRedisCache implements JCache {
 
-
     private static final  Logger LOGGER= LoggerFactory.getLogger(JRedisCache.class);
 
     @Resource
@@ -71,7 +70,7 @@ public class JRedisCache implements JCache {
     /**
      * @param key
      * @return
-     * @throws com.dc.gameserver.extComponents.springJredisCache.JRedisCacheException
+     * @throws JRedisCacheException
      */
     @Override
     public ArrayList<?> getList(String key)  {
@@ -149,7 +148,7 @@ public class JRedisCache implements JCache {
     /**
      * @param key
      * @return
-     * @throws com.dc.gameserver.extComponents.springJredisCache.JRedisCacheException
+     * @throws      JRedisCacheException
      */
     @Override
     public FastMap<?,?> getFastMap(String key)  {
@@ -188,7 +187,7 @@ public class JRedisCache implements JCache {
      *
      * @param key
      * @return the cached object or <tt>null</tt>
-     * @throws com.dc.gameserver.extComponents.springJredisCache.JRedisCacheException
+     * @throws JRedisCacheException
      */
     @Override
     public Serializable getObject(String key)  {
@@ -210,7 +209,7 @@ public class JRedisCache implements JCache {
      *
      * @param key
      * @param value
-     * @throws com.dc.gameserver.extComponents.springJredisCache.JRedisCacheException
+     * @throws JRedisCacheException
      */
     @Override
     public void putObject(String key, Serializable value)  {

@@ -31,41 +31,11 @@ public class JRedisSerializationUtils {
         super();
     }
 
-    // Clone
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Deep clone an <code>Object</code> using serialization.</p>
-     *
-     * <p>This is many times slower than writing clone methods by hand
-     * on all objects in your object graph. However, for complex object
-     * graphs, or for those that don't support deep cloning this can
-     * be a simple alternative implementation. Of course all the objects
-     * must be <code>Serializable</code>.</p>
-     *
-     * @param object  the <code>Serializable</code> object to clone
-     * @return the cloned object
-     * @throws org.apache.commons.lang.SerializationException (runtime) if the serialization fails
-     */
-    public static Object clone(Serializable object) {
-        return deserialize(serialize(object));
-    }
 
-    // Serialize
-    //-----------------------------------------------------------------------
     /**
-     * <p>Serializes an <code>Object</code> to the specified stream.</p>
-     *
-     * <p>The stream will be closed once the object is written.
-     * This avoids the need for a finally clause, and maybe also exception
-     * handling, in the application code.</p>
-     *
-     * <p>The stream passed in is not buffered internally within this method.
-     * This is the responsibility of your application if desired.</p>
-     *
-     * @param obj  the object to serialize to bytes, may be null
-     * @param outputStream  the stream to write to, must not be null
-     * @throws IllegalArgumentException if <code>outputStream</code> is <code>null</code>
-     * @throws org.apache.commons.lang.SerializationException (runtime) if the serialization fails
+     * 将对象序列化
+     * @param obj
+     * @param outputStream
      */
     private static void serialize(Serializable obj, OutputStream outputStream) {
         if (outputStream == null) {
@@ -105,23 +75,10 @@ public class JRedisSerializationUtils {
     }
 
 
-
-    // Deserialize
-    //-----------------------------------------------------------------------
     /**
-     * <p>Deserializes an <code>Object</code> from the specified stream.</p>
-     *
-     * <p>The stream will be closed once the object is written. This
-     * avoids the need for a finally clause, and maybe also exception
-     * handling, in the application code.</p>
-     *
-     * <p>The stream passed in is not buffered internally within this method.
-     * This is the responsibility of your application if desired.</p>
-     *
-     * @param inputStream  the serialized object input stream, must not be null
-     * @return the deserialized object
-     * @throws IllegalArgumentException if <code>inputStream</code> is <code>null</code>
-     * @throws JRedisCacheException (runtime) if the serialization fails
+     * 反序列化对象
+     * @param inputStream
+     * @return
      */
     private static Object deserialize(InputStream inputStream) {
         if (inputStream == null) {

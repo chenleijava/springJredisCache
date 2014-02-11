@@ -31,99 +31,10 @@
     </bean>
 
 
-    <!--游戏数据源-->
-    <bean id="gameDruidDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
-        <property name="driverClassName"  value="${jdbc.driverClassName}"/>
-        <property name="url" value="${jdbc.url}" />
-        <property name="username" value="${jdbc.username}"/>
-        <property name="password" value="${jdbc.password}" />
-        <property name="maxActive" value="${maxActive}"/>
-        <property name="maxWait" value="${maxWait}"/>
-        <property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}"/>
-        <property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}"/>
-        <property name="validationQuery" value="${validationQuery}"/>
-        <property name="testWhileIdle" value="${testWhileIdle}"/>
-        <property name="testOnBorrow" value="${testOnBorrow}"/>
-        <property name="testOnReturn" value="${testOnReturn}"/>
-        <property name="poolPreparedStatements" value="${poolPreparedStatements}"/>
-        <property name="maxPoolPreparedStatementPerConnectionSize" value="${maxPoolPreparedStatementPerConnectionSize}"/>
-    </bean>
 
-    <!--quratzDataSource -->
-    <!--<bean id="quratzDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">-->
-        <!--<property name="driverClassName"  value="${jdbc.driverClassName}"/>-->
-        <!--<property name="url" value="${quratz_jdbc.url}" />-->
-        <!--<property name="username" value="${jdbc.username}"/>-->
-        <!--<property name="password" value="${jdbc.password}" />-->
-        <!--<property name="maxActive" value="${maxActive}"/>-->
-        <!--<property name="maxWait" value="${maxWait}"/>-->
-        <!--<property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}"/>-->
-        <!--<property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}"/>-->
-        <!--<property name="validationQuery" value="${validationQuery}"/>-->
-        <!--<property name="testWhileIdle" value="${testWhileIdle}"/>-->
-        <!--<property name="testOnBorrow" value="${testOnBorrow}"/>-->
-        <!--<property name="testOnReturn" value="${testOnReturn}"/>-->
-        <!--<property name="poolPreparedStatements" value="${poolPreparedStatements}"/>-->
-        <!--<property name="maxPoolPreparedStatementPerConnectionSize" value="${maxPoolPreparedStatementPerConnectionSize}"/>-->
-    <!--</bean>-->
-
-
-    <!--使用proxool作为游戏数据源-->
-    <!--<bean id="proxoolDataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">-->
-        <!--<property name="alias" value="${jdbc-0.proxool.alias}"/>-->
-        <!--<property name="driverUrl" value="${jdbc-0.proxool.driver-url}"/>-->
-        <!--<property name="driver" value="${jdbc-0.proxool.driver-class}"/>-->
-        <!--<property name="user" value="${jdbc-0.user}"/>-->
-        <!--<property name="password" value="${jdbc-0.password}"/>-->
-        <!--&lt;!&ndash; 最大活动时间(超过此时间线程将被kill,默认为5分钟) &ndash;&gt;-->
-        <!--<property name="maximumActiveTime" value="${jdbc-0.proxool.maximum-active-time}" />-->
-        <!--&lt;!&ndash; 最少保持的空闲连接数 （默认2个） &ndash;&gt;-->
-        <!--<property name="prototypeCount" value="${jdbc-0.proxool.prototype-count}" />-->
-        <!--&lt;!&ndash; 最大连接数 （默认5个） &ndash;&gt;-->
-        <!--<property name="maximumConnectionCount" value="${jdbc-0.proxool.maximum-connection-count}" />-->
-        <!--&lt;!&ndash; 最小连接数 （默认2个） &ndash;&gt;-->
-        <!--<property name="minimumConnectionCount" value="${jdbc-0.proxool.minimum-connection-count}" />-->
-        <!--<property name="statistics" value="${jdbc-0.proxool.statistics}" />-->
-        <!--<property name="simultaneousBuildThrottle" value="${jdbc-0.proxool.simultaneous-build-throttle}" />-->
-        <!--<property name="houseKeepingTestSql" value="${jdbc-0.proxool.house-keeping-test-sql}" />-->
-        <!--<property name="trace" value="${jdbc-0.proxool.trace}" />-->
-        <!--<property name="verbose" value="${jdbc-0.proxool.verbose}" />-->
-        <!--<property name="testBeforeUse" value="${jdbc-0.proxool.testBeforeUse}" />-->
-        <!--<property name="statisticsLogLevel" value="${jdbc-0.proxool.statisticsLogLevel}" />-->
-
-    <!--</bean>-->
-
-
-    <!--<bean id="mysqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean" autowire="default">-->
-        <!--<property name="dataSource" ref="gameDruidDataSource"/>-->
-        <!--<property name="mapperLocations" value="file:src/main/java/com/dc/gameserver/serverCore/model/dbsql/mapper/*.xml"/>-->
-    <!--</bean>-->
-
-
-    <!--Note that only interfaces with at least one method will be registered; concrete classes will be ignored.
-    register mapper-->
-    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-        <property name="basePackage" value="com.dc.gameserver.serverCore.model.dbsql.mapper" />
-        <property name="sqlSessionFactoryBeanName" value="mysqlSessionFactoryBean" />
-    </bean>
-
-
-
-    <!-- 事务管理器 -->
-    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-        <property name="dataSource" ref="gameDruidDataSource" />
-    </bean>
-
-    <context:annotation-config />
-    <tx:annotation-driven transaction-manager="transactionManager"/>
-
-    <!--spring ,mybatis batch update insert-->
-    <!--<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">-->
-        <!--<constructor-arg ref="mysqlSessionFactoryBean"/>-->
-    <!--</bean>-->
 
     <!--定时任务配置-->
     <import resource="spring-jredis.xml"/>
-    <!--<import resource="spring-jedis.xml"/>-->
+
 
 </beans>

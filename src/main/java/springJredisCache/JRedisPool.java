@@ -100,7 +100,6 @@ public class JRedisPool  extends Pool<BinaryJedis> {
             if( database != 0 ) {
                 binaryJedis.select(database);
             }
-
             return binaryJedis;
         }
 

@@ -41,11 +41,9 @@ public class JRedisCache implements JCache {
      * @param binaryJedis
      */
     protected void coverException(Exception ex,JRedisPool jRedisPool,BinaryJedis binaryJedis){
-        if (ex instanceof JRedisCacheException||ex instanceof IOException){
+        if (binaryJedis==null)throw new NullPointerException();
+        if (ex instanceof JRedisCacheException ||ex instanceof IOException){
             jRedisPool.returnBrokenResource(binaryJedis); //销毁该对象
-        }else {
-            //否则归还到对象池中
-            jRedisPool.returnResource(binaryJedis);
         }
     }
     /**
@@ -62,7 +60,12 @@ public class JRedisCache implements JCache {
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         }finally {
-            jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
         return null;
     }
@@ -70,7 +73,7 @@ public class JRedisCache implements JCache {
     /**
      * @param key
      * @return
-     * @throws JRedisCacheException
+     * @throws springJredisCache.JRedisCacheException
      */
     @Override
     public ArrayList<?> getList(String key)  {
@@ -78,19 +81,103 @@ public class JRedisCache implements JCache {
         try {
             binaryJedis=jRedisPool.getResource();
             if (LOGGER.isDebugEnabled()){
-                LOGGER.info("open connection->>"+binaryJedis.toString());
+                LOGGER.debug("open redis connection-{" + binaryJedis.toString() + "}");
             }
             return (ArrayList<?>) JRedisSerializationUtils.deserialize(binaryJedis.get(key.getBytes()));
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         }finally {
-            if (LOGGER.isDebugEnabled()){
-                LOGGER.info("close connection->>"+binaryJedis.toString());
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
             }
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+
         }
         return null;
     }
+
+
+    /**
+     * @param key
+     * @param list
+     */
+    @Override
+    public void putList(String key, ArrayList<?> list)  {
+        BinaryJedis binaryJedis=null;
+        try {
+            binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
+            binaryJedis.set(key.getBytes(), JRedisSerializationUtils.serialize(list));
+        }catch (Exception ex){
+            coverException(ex,jRedisPool,binaryJedis);
+        } finally {
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @param key
+     * @return
+     * @throws springJredisCache.JRedisCacheException
+     */
+    @Override
+    public FastTable<?> getFastTable(String key)  {
+        BinaryJedis binaryJedis=null;
+        try {
+            binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
+            return (FastTable<?>) JRedisSerializationUtils.deserialize(binaryJedis.get(key.getBytes()));
+        }catch (Exception ex){
+            coverException(ex,jRedisPool,binaryJedis);
+        }finally {
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * @param key
+     * @param list
+     */
+    @Override
+    public void putFastTable(String key, FastTable<?> list)  {
+        BinaryJedis binaryJedis=null;
+        try {
+            binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
+            binaryJedis.set(key.getBytes(), JRedisSerializationUtils.serialize(list));
+        }catch (Exception ex){
+            coverException(ex,jRedisPool,binaryJedis);
+        } finally {
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
+        }
+    }
+
 
     /**
      * Remove an item from the cache
@@ -102,30 +189,23 @@ public class JRedisCache implements JCache {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             binaryJedis.del(key.getBytes());
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         } finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
     }
 
-    /**
-     * @param key
-     * @param list
-     */
-    @Override
-    public void putList(String key, ArrayList<?> list)  {
-        BinaryJedis binaryJedis=null;
-        try {
-            binaryJedis=jRedisPool.getResource();
-            binaryJedis.set(key.getBytes(), JRedisSerializationUtils.serialize(list));
-        }catch (Exception ex){
-            coverException(ex,jRedisPool,binaryJedis);
-        } finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
-        }
-    }
+
 
     /**
      * @param key
@@ -136,30 +216,46 @@ public class JRedisCache implements JCache {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             binaryJedis.set(key.getBytes(), JRedisSerializationUtils.serialize(fastMap));
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         }  finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
     }
 
-    
+
     /**
      * @param key
      * @return
-     * @throws      JRedisCacheException
+     * @throws springJredisCache.JRedisCacheException
      */
     @Override
     public FastMap<?,?> getFastMap(String key)  {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             return (FastMap<?, ?>) JRedisSerializationUtils.deserialize(binaryJedis.get(key.getBytes()));
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         }  finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
         return null;
     }
@@ -174,31 +270,47 @@ public class JRedisCache implements JCache {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             binaryJedis.del(key.getBytes());
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         }  finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
     }
- 
+
     /**
      * Get an item from the cache, nontransactionally
      *
      * @param key
      * @return the cached object or <tt>null</tt>
-     * @throws JRedisCacheException
+     * @throws springJredisCache.JRedisCacheException
      */
     @Override
     public Serializable getObject(String key)  {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             return (Serializable) JRedisSerializationUtils.deserialize(binaryJedis.get(key.getBytes()));
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         } finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
         return null;
     }
@@ -209,18 +321,26 @@ public class JRedisCache implements JCache {
      *
      * @param key
      * @param value
-     * @throws JRedisCacheException
+     * @throws springJredisCache.JRedisCacheException
      */
     @Override
     public void putObject(String key, Serializable value)  {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             binaryJedis.set(key.getBytes(),JRedisSerializationUtils.serialize(value));
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         } finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
     }
 
@@ -234,11 +354,19 @@ public class JRedisCache implements JCache {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             binaryJedis.del(key.getBytes());
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         } finally {
-            if (binaryJedis!=null) jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
     }
 
@@ -247,6 +375,9 @@ public class JRedisCache implements JCache {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             FastTable<String> keys = new FastTable<String>();
             Set<byte[]> list = binaryJedis.keys(String.valueOf("*").getBytes());
             for (byte[] bs : list) {
@@ -256,7 +387,12 @@ public class JRedisCache implements JCache {
         } catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         }finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
         return null;
     }
@@ -270,6 +406,9 @@ public class JRedisCache implements JCache {
         BinaryJedis binaryJedis=null;
         try {
             binaryJedis=jRedisPool.getResource();
+            if (LOGGER.isDebugEnabled()){
+                LOGGER.debug("open redis connection-{"+binaryJedis.toString()+"}");
+            }
             for (String key:keys){
                 //After the timeout the key will be
                 // automatically deleted by the server.
@@ -278,7 +417,12 @@ public class JRedisCache implements JCache {
         }catch (Exception ex){
             coverException(ex,jRedisPool,binaryJedis);
         } finally {
-            if (binaryJedis!=null)jRedisPool.returnResource(binaryJedis);
+            if (binaryJedis!=null){
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()){
+                    LOGGER.debug("close redis connection-{"+binaryJedis.toString()+"}");
+                }
+            }
         }
     }
 

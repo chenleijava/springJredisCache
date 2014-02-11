@@ -8,13 +8,11 @@
 package springJredisCache;
 
 
+import com.esotericsoftware.kryo.Kryo;
 import de.ruedigermoeller.serialization.FSTObjectInput;
 import de.ruedigermoeller.serialization.FSTObjectOutput;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 
 /**
  * @author 石头哥哥 </br>
@@ -27,17 +25,10 @@ import java.io.Serializable;
  */
 public class JRedisSerializationUtils {
 
-    /**
-     * <p>SerializationUtils instances should NOT be constructed in standard programming.
-     * Instead, the class should be used as <code>SerializationUtils.clone(object)</code>.</p>
-     *
-     * <p>This constructor is public to permit tools that require a JavaBean instance
-     * to operate.</p>
-     * @since 2.0
-     */
-    public JRedisSerializationUtils() {
-        super();
-    }
+
+    public JRedisSerializationUtils(){}
+    public static Kryo kryo = new Kryo();
+
 
     // Serialize
     //-----------------------------------------------------------------------
@@ -49,28 +40,19 @@ public class JRedisSerializationUtils {
      * @return a byte[] with the converted Serializable
      * @throws JRedisCacheException (runtime) if the serialization fails
      */
-    public static byte[] serialize(Serializable obj) {
+    public static byte[] fastSerialize(Object obj) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(512);
         serialize(obj, byteArrayOutputStream);
         return byteArrayOutputStream.toByteArray();
     }
 
     /**
-     * <p>Serializes an <code>Object</code> to the specified stream.</p>
-     *
-     * <p>The stream will be closed once the object is written.
-     * This avoids the need for a finally clause, and maybe also exception
-     * handling, in the application code.</p>
-     *
-     * <p>The stream passed in is not buffered internally within this method.
-     * This is the responsibility of your application if desired.</p>
-     *
      * @param obj  the object to serialize to bytes, may be null
      * @param byteArrayOutputStream  the stream to write to, must not be null
      * @throws IllegalArgumentException if <code>outputStream</code> is <code>null</code>
      * @throws org.apache.commons.lang.SerializationException (runtime) if the serialization fails
      */
-    private static void serialize(Serializable obj, ByteArrayOutputStream byteArrayOutputStream) {
+    private static void serialize(Object obj, ByteArrayOutputStream byteArrayOutputStream) {
         if (byteArrayOutputStream == null) {
             throw new IllegalArgumentException("The OutputStream must not be null");
         }
@@ -87,6 +69,8 @@ public class JRedisSerializationUtils {
                 if (out != null) {
                     out.close();
                     out=null;
+                    byteArrayOutputStream.close();
+                    byteArrayOutputStream=null;
                 }
             } catch (IOException ex) {
                 // ignore close exception
@@ -103,7 +87,7 @@ public class JRedisSerializationUtils {
      * @throws IllegalArgumentException if <code>objectData</code> is <code>null</code>
      * @throws JRedisCacheException (runtime) if the serialization fails
      */
-    public static Object deserialize(byte[] objectData) {
+    public static Object fastDeserialize(byte[] objectData) {
         if (objectData == null) {
             throw new IllegalArgumentException("The byte[] must not be null");
         }
@@ -143,10 +127,57 @@ public class JRedisSerializationUtils {
                 if (in != null) {
                     in.close();
                     in=null;
+                    byteArrayInputStream.close();
+                    byteArrayInputStream=null;
                 }
             } catch (IOException ex) {
                 // ignore close exception
             }
         }
     }
+
+
+
+    //jdk原生序列换方案
+    public static byte[] jserialize(Object obj) {
+        ObjectOutputStream oos = null;
+        ByteArrayOutputStream baos =null;
+        try {
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+            oos.writeObject(obj);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new JRedisCacheException(e);
+        } finally {
+            if (oos != null)
+                try {
+                    oos.close();
+                    baos.close();
+                } catch (IOException e) {
+                }
+        }
+    }
+
+    public static Object jdeserialize(byte[] bits) {
+        ObjectInputStream ois = null;
+        ByteArrayInputStream bais =null;
+        try {
+            bais = new ByteArrayInputStream(bits);
+            ois = new ObjectInputStream(bais);
+            return ois.readObject();
+        } catch (Exception e) {
+            throw new JRedisCacheException(e);
+        } finally {
+            if (ois != null)
+                try {
+                    ois.close();
+                    bais.close();
+                } catch (IOException e) {
+                }
+        }
+    }
+
+
+
 }

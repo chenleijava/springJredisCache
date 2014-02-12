@@ -54,6 +54,7 @@ public class JRedisSerializationUtils {
             throw new JRedisCacheException(ex);
         } finally {
             try {
+                obj=null;
                 if (out != null) {
                     out.close();    //call flush byte buffer
                     out=null;
@@ -93,6 +94,7 @@ public class JRedisSerializationUtils {
             throw new JRedisCacheException(ex);
         } finally {
             try {
+                objectData=null;
                 if (in != null) {
                     in.close();
                     in=null;
@@ -138,6 +140,7 @@ public class JRedisSerializationUtils {
             }
         }finally {
             try {
+                obj=null;
                 if (byteArrayOutputStream!=null){
                     byteArrayOutputStream.close();
                     byteArrayOutputStream=null;
@@ -160,6 +163,7 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
+        if (bytes==null) throw new JRedisCacheException("bytes can not be null");
         Input input = null;
         try {
             input = new Input(bytes);
@@ -170,6 +174,7 @@ public class JRedisSerializationUtils {
                 input=null;
             }
         }finally {
+            bytes=null;
             if (input!=null){
                 input.close();
                 input=null;

@@ -9,6 +9,8 @@ package springJredisCache;
 
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import de.ruedigermoeller.serialization.FSTObjectInput;
 import de.ruedigermoeller.serialization.FSTObjectOutput;
 
@@ -27,8 +29,7 @@ public class JRedisSerializationUtils {
 
 
     public JRedisSerializationUtils(){}
-    public static Kryo kryo = new Kryo();
-
+    private static final Kryo kryo = new Kryo();
 
     // Serialize
     //-----------------------------------------------------------------------
@@ -41,34 +42,23 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException (runtime) if the serialization fails
      */
     public static byte[] fastSerialize(Object obj) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(512);
-        serialize(obj, byteArrayOutputStream);
-        return byteArrayOutputStream.toByteArray();
-    }
-
-    /**
-     * @param obj  the object to serialize to bytes, may be null
-     * @param byteArrayOutputStream  the stream to write to, must not be null
-     * @throws IllegalArgumentException if <code>outputStream</code> is <code>null</code>
-     * @throws org.apache.commons.lang.SerializationException (runtime) if the serialization fails
-     */
-    private static void serialize(Object obj, ByteArrayOutputStream byteArrayOutputStream) {
-        if (byteArrayOutputStream == null) {
-            throw new IllegalArgumentException("The OutputStream must not be null");
-        }
+        ByteArrayOutputStream byteArrayOutputStream = null;
         FSTObjectOutput out = null;
         try {
             // stream closed in the finally
+            byteArrayOutputStream = new ByteArrayOutputStream(512);
             out = new FSTObjectOutput(byteArrayOutputStream);
             out.writeObject(obj);
-            out.flush();
+            return byteArrayOutputStream.toByteArray();
         } catch (IOException ex) {
             throw new JRedisCacheException(ex);
         } finally {
             try {
                 if (out != null) {
-                    out.close();
+                    out.close();    //call flush byte buffer
                     out=null;
+                }
+                if (byteArrayOutputStream!=null){
                     byteArrayOutputStream.close();
                     byteArrayOutputStream=null;
                 }
@@ -77,6 +67,8 @@ public class JRedisSerializationUtils {
             }
         }
     }
+
+
     // Deserialize
     //-----------------------------------------------------------------------
     /**
@@ -88,34 +80,11 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException (runtime) if the serialization fails
      */
     public static Object fastDeserialize(byte[] objectData) {
-        if (objectData == null) {
-            throw new IllegalArgumentException("The byte[] must not be null");
-        }
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(objectData);
-        return deserialize(byteArrayInputStream);
-    }
-    /**
-     * <p>Deserializes an <code>Object</code> from the specified stream.</p>
-     *
-     * <p>The stream will be closed once the object is written. This
-     * avoids the need for a finally clause, and maybe also exception
-     * handling, in the application code.</p>
-     *
-     * <p>The stream passed in is not buffered internally within this method.
-     * This is the responsibility of your application if desired.</p>
-     *
-     * @param byteArrayInputStream  the serialized object input stream, must not be null
-     * @return the deserialized object
-     * @throws IllegalArgumentException if <code>inputStream</code> is <code>null</code>
-     * @throws JRedisCacheException (runtime) if the serialization fails
-     */
-    private static Object deserialize(ByteArrayInputStream byteArrayInputStream) {
-        if (byteArrayInputStream == null) {
-            throw new IllegalArgumentException("The InputStream must not be null");
-        }
+        ByteArrayInputStream byteArrayInputStream = null;
         FSTObjectInput in = null;
         try {
             // stream closed in the finally
+            byteArrayInputStream = new ByteArrayInputStream(objectData);
             in = new FSTObjectInput(byteArrayInputStream);
             return in.readObject();
         } catch (ClassNotFoundException ex) {
@@ -127,6 +96,8 @@ public class JRedisSerializationUtils {
                 if (in != null) {
                     in.close();
                     in=null;
+                }
+                if (byteArrayInputStream!=null){
                     byteArrayInputStream.close();
                     byteArrayInputStream=null;
                 }
@@ -136,9 +107,85 @@ public class JRedisSerializationUtils {
         }
     }
 
+    //基于kryo序列换方案
+    /**
+     * 将对象序列化为字节数组
+     * @param obj
+     * @return   字节数组
+     * @throws JRedisCacheException
+     */
+    public static byte[] kryoSerialize(Object obj) throws JRedisCacheException {
+        if (obj==null) throw new JRedisCacheException("obj can not be null");
+        ByteArrayOutputStream byteArrayOutputStream=null;
+        Output output =null;
+        try {
+            byteArrayOutputStream=new ByteArrayOutputStream();
+            output = new Output(byteArrayOutputStream);
+            kryo.writeClassAndObject(output, obj);
+            return output.toBytes();
+        }catch (JRedisCacheException e){
+            try {
+                if (byteArrayOutputStream!=null){
+                    byteArrayOutputStream.close();
+                    byteArrayOutputStream=null;
+                }
+                if (output!=null){
+                    output.close();
+                    output=null;
+                }
+            } catch (IOException ee) {
+                ee.printStackTrace();
+            }
+        }finally {
+            try {
+                if (byteArrayOutputStream!=null){
+                    byteArrayOutputStream.close();
+                    byteArrayOutputStream=null;
+                }
+                if (output!=null){
+                    output.close();   /** Writes the buffered bytes to the underlying OutputStream, if any .flush();. */
+                    output=null;
+                }
+            } catch (IOException ee) {
+                ee.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 将字节数组反序列化为对象
+     * @param bytes    字节数组
+     * @return           object
+     * @throws JRedisCacheException
+     */
+    public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
+        Input input = null;
+        try {
+            input = new Input(bytes);
+            return kryo.readClassAndObject(input);
+        }catch (JRedisCacheException e){
+            if (input!=null){
+                input.close();
+                input=null;
+            }
+        }finally {
+            if (input!=null){
+                input.close();
+                input=null;
+            }
+        }
+        return null;
+    }
+
 
 
     //jdk原生序列换方案
+    /**
+     *
+     * @param obj
+     * @return
+     */
     public static byte[] jserialize(Object obj) {
         ObjectOutputStream oos = null;
         ByteArrayOutputStream baos =null;
@@ -159,6 +206,11 @@ public class JRedisSerializationUtils {
         }
     }
 
+    /**
+     *
+     * @param bits
+     * @return
+     */
     public static Object jdeserialize(byte[] bits) {
         ObjectInputStream ois = null;
         ByteArrayInputStream bais =null;

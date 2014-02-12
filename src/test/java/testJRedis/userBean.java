@@ -28,18 +28,18 @@ public class userBean implements Serializable {
     }
 
 
-    public static void main(String[]args){
+    @org.junit.Test
+    public void testSerialize(){
         userBean bean=new userBean();
         bean.setUsername("xxxxx");
         bean.setPassword("123456");
         bean.setAge(1000000);
-        JRedisSerializationUtils.kryo.register(userBean.class);
         System.out.println("序列化 ， 反序列化 对比测试：");
         long time1 = System.currentTimeMillis();
         for (int i = 0; i < 100000; i++) {
-            JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(bean));
+            JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(bean)) ;
         }
-        System.out.println("原生序列化方案[序列化100000次]："
+        System.out.println("kryo序列化方案[序列化100000次]："
                 + (System.currentTimeMillis() - time1));
 
         long time2 = System.currentTimeMillis();
@@ -48,34 +48,14 @@ public class userBean implements Serializable {
         }
         System.out.println("fast序列化方案[序列化100000次]："
                 + (System.currentTimeMillis() - time2));
+
+        long time3 = System.currentTimeMillis();
+        for (int i = 0; i < 100000; i++) {
+            JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(bean));
+        }
+        System.out.println("jdk序列化方案[序列化100000次]："
+                + (System.currentTimeMillis() - time3));
     }
-
-
-//    @Test
-//    public void testSerialize(){
-//        userBean bean=new userBean();
-//        bean.setUsername("xxxxx");
-//        bean.setPassword("123456");
-//        bean.setAge(1000000);
-//        JRedisSerializationUtils.kryo.register(userBean.class);
-//        System.out.println("序列化 ， 反序列化 对比测试：");
-//        long time1 = System.currentTimeMillis();
-////        JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(bean));
-//        for (int i = 0; i < 100000; i++) {
-//            JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(bean));
-//        }
-//        System.out.println("原生序列化方案[序列化100000次]："
-//                + (System.currentTimeMillis() - time1));
-//
-//
-//        long time2 = System.currentTimeMillis();
-//        for (int i = 0; i < 100000; i++) {
-//            JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(bean));
-//        }
-//        System.out.println("fast序列化方案[序列化100000次]："
-//                + (System.currentTimeMillis() - time2));
-//    }
-//
 
 
     public String getUsername() {

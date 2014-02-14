@@ -35,26 +35,31 @@ public class userBean implements Serializable {
         bean.setPassword("123456");
         bean.setAge(1000000);
         System.out.println("序列化 ， 反序列化 对比测试：");
-        long time1 = System.currentTimeMillis();
-        for (int i = 0; i < 100000; i++) {
-            JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(bean)) ;
-        }
-        System.out.println("kryo序列化方案[序列化100000次]："
-                + (System.currentTimeMillis() - time1));
 
-        long time2 = System.currentTimeMillis();
-        for (int i = 0; i < 100000; i++) {
-            JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(bean));
-        }
-        System.out.println("fast序列化方案[序列化100000次]："
-                + (System.currentTimeMillis() - time2));
+       for(int j=0;j!=50;++j){
+           long time1 = System.currentTimeMillis();
+           for (int i = 0; i < 100000; i++) {
+               JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(bean)) ;
+           }
+           System.out.println("kryo序列化方案[序列化100000次]："
+                   + (System.currentTimeMillis() - time1));
 
-        long time3 = System.currentTimeMillis();
-        for (int i = 0; i < 100000; i++) {
-            JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(bean));
-        }
-        System.out.println("jdk序列化方案[序列化100000次]："
-                + (System.currentTimeMillis() - time3));
+           long time2 = System.currentTimeMillis();
+           for (int i = 0; i < 100000; i++) {
+               JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(bean));
+           }
+           System.out.println("fast序列化方案[序列化100000次]："
+                   + (System.currentTimeMillis() - time2));
+
+           long time3 = System.currentTimeMillis();
+           for (int i = 0; i < 100000; i++) {
+               JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(bean));
+           }
+           System.out.println("jdk序列化方案[序列化100000次]："
+                   + (System.currentTimeMillis() - time3));
+
+           System.out.println("------------------------------------------------------------------------------");
+       }
     }
 
 

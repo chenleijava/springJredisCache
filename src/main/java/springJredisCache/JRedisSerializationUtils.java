@@ -121,23 +121,12 @@ public class JRedisSerializationUtils {
         ByteArrayOutputStream byteArrayOutputStream=null;
         Output output =null;
         try {
-            byteArrayOutputStream=new ByteArrayOutputStream();
+            byteArrayOutputStream=new ByteArrayOutputStream();      //缓冲数据
             output = new Output(byteArrayOutputStream);
             kryo.writeClassAndObject(output, obj);
             return output.toBytes();
         }catch (JRedisCacheException e){
-            try {
-                if (byteArrayOutputStream!=null){
-                    byteArrayOutputStream.close();
-                    byteArrayOutputStream=null;
-                }
-                if (output!=null){
-                    output.close();
-                    output=null;
-                }
-            } catch (IOException ee) {
-                ee.printStackTrace();
-            }
+            throw new JRedisCacheException("Serialize obj exception");
         }finally {
             try {
                 obj=null;
@@ -153,7 +142,6 @@ public class JRedisSerializationUtils {
                 ee.printStackTrace();
             }
         }
-        return null;
     }
 
     /**
@@ -163,16 +151,13 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
-        if (bytes==null) throw new JRedisCacheException("bytes can not be null");
         Input input = null;
+        if (bytes==null) throw new JRedisCacheException("bytes can not be null");
         try {
             input = new Input(bytes);
             return kryo.readClassAndObject(input);
         }catch (JRedisCacheException e){
-            if (input!=null){
-                input.close();
-                input=null;
-            }
+            throw new JRedisCacheException("Deserialize bytes exception");
         }finally {
             bytes=null;
             if (input!=null){
@@ -180,9 +165,7 @@ public class JRedisSerializationUtils {
                 input=null;
             }
         }
-        return null;
     }
-
 
 
     //jdk原生序列换方案

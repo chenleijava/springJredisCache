@@ -52,11 +52,9 @@ public class Test {
         }
     }
 
-
     @After
     public void closeApp(){
         springContext.close();
     }
-
 
 }

@@ -5,6 +5,7 @@
 3.基于 FST序列化方案;
 
 #序列化测试性能对比 10w次序列化 反序列化：
+![test](http://git.oschina.net/502959937/JRedis/blob/master/pic/test.png)
 
 
 

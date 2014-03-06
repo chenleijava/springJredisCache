@@ -11,6 +11,10 @@ package springJredisCache;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.ExtensionRegistryLite;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.MessageLite;
 import de.ruedigermoeller.serialization.FSTObjectInput;
 import de.ruedigermoeller.serialization.FSTObjectOutput;
 
@@ -29,6 +33,7 @@ public class JRedisSerializationUtils {
 
 
     public JRedisSerializationUtils(){}
+
     private static final Kryo kryo = new Kryo();
 
     // Serialize
@@ -218,6 +223,36 @@ public class JRedisSerializationUtils {
         }
     }
 
+
+   // 基于protobuffer的序列化方案
+
+    /**
+     *
+     * @param bytes        字节数据
+     * @param messageLite  序列化对应的类型
+     * @return
+     * @throws JRedisCacheException
+     */
+    public static MessageLite protoDeserialize(byte[] bytes,MessageLite messageLite) throws JRedisCacheException{
+        assert (bytes!=null&&messageLite!=null);
+        try {
+            return  messageLite.getParserForType().parsePartialFrom(CodedInputStream.newInstance(bytes),ExtensionRegistryLite.getEmptyRegistry());
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     *
+     * @param messageLite  序列化对应的类型
+     * @return
+     * @throws JRedisCacheException
+     */
+    public static byte[] protoSerialize(MessageLite messageLite) throws JRedisCacheException{
+        assert (messageLite!=null);
+        return  messageLite.toByteArray();
+    }
 
 
 }

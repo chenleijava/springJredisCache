@@ -1,5 +1,6 @@
 package testJRedis;
 
+import proto.RoleVo;
 import springJredisCache.JRedisSerializationUtils;
 
 import java.io.Serializable;
@@ -11,16 +12,16 @@ import java.util.ArrayList;
  *         Date:14-2-11 </br>
  *         Time:下午3:36 </br>
  *         Package:{@link springJredisCache}</br>
- *         Comment：
+ *         Comment：    序列化 反序列化 测试
  */
-public class userBean implements Serializable {
+public class TestD_S implements Serializable {
 
     private  String username;
     private  String password;
     private int age;
     private ArrayList<Integer> list;
 
-    public userBean(){
+    public TestD_S(){
         list=new ArrayList<Integer>();
         list.add(1);
         list.add(2);
@@ -30,33 +31,43 @@ public class userBean implements Serializable {
 
     @org.junit.Test
     public void testSerialize(){
-        userBean bean=new userBean();
-        bean.setUsername("xxxxx");
-        bean.setPassword("123456");
-        bean.setAge(1000000);
+        RoleVo.Builder builder=RoleVo.newBuilder();
+        builder.setRoleID(1);
+        builder.setRoleName("石头哥哥");
+        builder.setRoleSex(1);
+        RoleVo vo=builder.build();
+
         System.out.println("序列化 ， 反序列化 对比测试：");
 
        for(int j=0;j!=50;++j){
-           long time1 = System.currentTimeMillis();
-           for (int i = 0; i < 100000; i++) {
-               JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(bean)) ;
-           }
-           System.out.println("kryo序列化方案[序列化100000次]："
-                   + (System.currentTimeMillis() - time1));
+//           long time1 = System.currentTimeMillis();
+//           for (int i = 0; i < 100000; i++) {
+//               JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(vo)) ;
+//           }
+//           System.out.println("kryo序列化方案[序列化100000次]："
+//                   + (System.currentTimeMillis() - time1));
 
            long time2 = System.currentTimeMillis();
            for (int i = 0; i < 100000; i++) {
-               JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(bean));
+               JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo));
            }
            System.out.println("fast序列化方案[序列化100000次]："
                    + (System.currentTimeMillis() - time2));
 
            long time3 = System.currentTimeMillis();
            for (int i = 0; i < 100000; i++) {
-               JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(bean));
+               JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(vo));
            }
            System.out.println("jdk序列化方案[序列化100000次]："
                    + (System.currentTimeMillis() - time3));
+
+
+           long time4 = System.currentTimeMillis();
+           for (int i = 0; i < 100000; i++) {
+               JRedisSerializationUtils.protoDeserialize(JRedisSerializationUtils.protoSerialize(vo),RoleVo.getDefaultInstance()) ;
+           }
+           System.out.println("protoBuffer序列化方案[序列化100000次]："
+                   + (System.currentTimeMillis() - time4));
 
            System.out.println("------------------------------------------------------------------------------");
        }

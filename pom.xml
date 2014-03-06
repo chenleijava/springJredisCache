@@ -110,6 +110,7 @@
         </dependency>
 
 
+
         <dependency>
             <groupId>org.javolution</groupId>
             <artifactId>javolution-core-java</artifactId>
@@ -155,6 +156,18 @@
             <version>2.22</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.objenesis</groupId>
+            <artifactId>objenesis</artifactId>
+            <version>2.1</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>2.5.0</version>
+        </dependency>
 
         <dependency>
             <groupId>commons-configuration</groupId>

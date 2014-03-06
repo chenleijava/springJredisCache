@@ -8,7 +8,7 @@
 1.jdk原生序列化方案;    </br>
 2.基于kryo序列化方案 ;   </br>
 3.基于 FST序列化方案 ;   </br>
-3.基于 protobuffer序列化方案 ;   </br>
+4.基于 protobuffer序列化方案 ;   </br>
 
 #序列化测试性能对比 10w次序列化 反序列化：
 ![test](http://git.oschina.net/uploads/images/2014/0214/102416_f5ac080e_1052.png)

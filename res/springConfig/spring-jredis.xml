@@ -13,14 +13,14 @@
 
 
 
-    <!--  jRedisConfig BinaryJedis对象池参数配置 -->
+    <!--  jRedisConfig BinaryJedis对象池参数配置  pool 采用默认配置参数-->
     <bean id="jRedisConfig" class="springJredisCache.JRedisConfig">
-        <property name="maxActive"     value="${jredis.pool.maxActive}" />
+         <property name="maxTotal"     value="${jredis.pool.maxTotal}" />
+         <property name="maxWaitMillis" value="${jredis.pool.maxWaitMillis}"/>
         <property name="maxIdle"       value="${jredis.pool.maxIdle}" />
-        <property name="maxWait"       value="${jredis.pool.maxWait}" />
         <property name="testOnBorrow"  value="${jredis.pool.testOnBorrow}" />
         <property name="testWhileIdle" value="${jredis.pool.testOnReturn}"/>
-    </bean>
+   </bean>
 
 
     <!---->

@@ -5,6 +5,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.stereotype.Service;
+import proto.RoleVo;
 import springJredisCache.JRedisCache;
 
 import javax.annotation.Resource;
@@ -36,6 +37,16 @@ public class Test {
     public void  testJRedis(){
         /**初始化spring容器*/
         Test test= (Test) springContext.getBean("test");
+
+
+        RoleVo.Builder builder=RoleVo.newBuilder();
+        builder.setRoleID(1);
+        builder.setRoleName("石头哥哥");
+        builder.setRoleSex(1);
+        RoleVo vo=builder.build();
+
+
+
         ArrayList<Integer> list=new ArrayList<Integer>();
         list.add(1);
         list.add(2);

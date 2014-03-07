@@ -147,10 +147,14 @@ public class JRedisPool extends Pool<BinaryJedis> {
             final BinaryJedis binaryJedis = pooledJedis.getObject();
             if (binaryJedis.isConnected()) {
                 try {
-                    binaryJedis.quit();
-                }catch (Exception e){
-                    //It seems like server has closed the connection
+                    try {
+                        binaryJedis.quit();
+                    } catch (Exception e) {
+                        //It seems like server has closed the connection
+                    }
                     binaryJedis.disconnect();
+                } catch (Exception e) {
+                    //IOException
                 }
             }
         }

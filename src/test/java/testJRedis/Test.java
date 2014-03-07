@@ -54,13 +54,16 @@ public class Test {
 
         //set
         test.jRedisCache.putList("list", list);
+        for(int i=0;i!=10000;++i){
+            // get
+            list= (ArrayList<Integer>)test. jRedisCache.getList("list");
 
-        // get
-        list= (ArrayList<Integer>)test. jRedisCache.getList("list");
-
-        for(int value:list){
-            System.out.println("get value from redis:" + value);
+            for(int value:list){
+                System.out.println("get value from redis:" + value);
+            }
         }
+
+
     }
 
     @After

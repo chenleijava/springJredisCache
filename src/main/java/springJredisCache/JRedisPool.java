@@ -135,26 +135,32 @@ public class JRedisPool extends Pool<BinaryJedis> {
             if (binaryJedis.getDB() != database) {
                 binaryJedis.select(database);
             }
-
         }
 
+        /**
+         *  BinaryJedis binaryJedis  was removed pool,and close client   socket
+         * @param pooledJedis
+         * @throws Exception
+         */
         @Override
         public void destroyObject(PooledObject<BinaryJedis> pooledJedis) throws Exception {
             final BinaryJedis binaryJedis = pooledJedis.getObject();
             if (binaryJedis.isConnected()) {
                 try {
-                    try {
-                        binaryJedis.quit();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    binaryJedis.quit();
+                }catch (Exception e){
+                    //It seems like server has closed the connection
                     binaryJedis.disconnect();
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         }
 
+
+        /**
+         * 创建连接对象 并将该对象池化
+         * @return
+         * @throws Exception
+         */
         @Override
         public PooledObject<BinaryJedis> makeObject() throws Exception {
             final BinaryJedis binaryJedis = new BinaryJedis(this.host, this.port, this.timeout);
@@ -177,6 +183,11 @@ public class JRedisPool extends Pool<BinaryJedis> {
             // TODO maybe should select db 0? Not sure right now.
         }
 
+        /**
+         * 验证对象是否有效
+         * @param pooledJedis
+         * @return
+         */
         @Override
         public boolean validateObject(PooledObject<BinaryJedis> pooledJedis) {
             final BinaryJedis binaryJedis = pooledJedis.getObject();

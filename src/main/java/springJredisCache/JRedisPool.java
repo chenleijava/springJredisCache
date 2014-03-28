@@ -93,12 +93,16 @@ public class JRedisPool extends Pool<BinaryJedis> {
     }
 
     public void returnBrokenResource(final BinaryJedis binaryJedis) {
-        returnBrokenResourceObject(binaryJedis);
+        if (binaryJedis!=null){
+            returnBrokenResourceObject(binaryJedis);
+        }
     }
 
     public void returnResource(final BinaryJedis resource) {
-        resource.resetState();
-        returnResourceObject(resource);
+        if (resource!=null){
+            resource.resetState();
+            returnResourceObject(resource);
+        }
     }
 
     /**

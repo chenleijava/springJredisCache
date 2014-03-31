@@ -21,6 +21,7 @@ import java.util.ArrayList;
 @Service("test")
 @SuppressWarnings("unchecked")
 public class Test {
+
     @Resource
     private JRedisCache jRedisCache;
 
@@ -33,8 +34,12 @@ public class Test {
     }
 
 
+
+
+
+
     @org.junit.Test
-    public void  testJRedis(){
+    public void  testJRedis() throws InterruptedException {
         /**初始化spring容器*/
         Test test= (Test) springContext.getBean("test");
 
@@ -67,7 +72,9 @@ public class Test {
         for (int i=0;i!=1000;++i){
             equArrayList.add(new TRoleEqu());
         }
-        test. jRedisCache.putList(key,equArrayList);
+        Thread.sleep(1000);
+
+       test. jRedisCache.putList(key,equArrayList);
        ArrayList<TRoleEqu> equArrayList2= (ArrayList<TRoleEqu>)test. jRedisCache.getList(key);
 
         System.out.println("get value from redis:" + equArrayList2);

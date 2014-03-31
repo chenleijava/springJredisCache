@@ -28,6 +28,8 @@ import java.io.*;
  *         Package:{@link springJredisCache}</br>
  *         Comment： 对象序列化工具类    序列化方案基于 FST - Fast Serialization
  *         https://github.com/flapdoodle-oss/de.flapdoodle.fast-serialization
+ *
+ *         注意生产中推荐使用FST序列化方案
  */
 public class JRedisSerializationUtils {
 

@@ -145,7 +145,11 @@ public class JRedisPool extends Pool<BinaryJedis> {
             this.host = host;
             this.port = port;
             this.timeout = timeout;
-            this.password = password;
+            if (password.equals(""))  {
+                this.password = null;
+            } else {
+                this.password=password;
+            }
             this.database = database;
             this.clientName = clientName;
         }

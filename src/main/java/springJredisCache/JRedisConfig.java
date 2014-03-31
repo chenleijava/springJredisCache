@@ -25,5 +25,6 @@ public class JRedisConfig  extends GenericObjectPoolConfig {
         setMinEvictableIdleTimeMillis(60000);
         setTimeBetweenEvictionRunsMillis(30000);
         setNumTestsPerEvictionRun(-1);
+
     }
 }

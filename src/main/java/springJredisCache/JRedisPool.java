@@ -161,12 +161,12 @@ public class JRedisPool extends Pool<BinaryJedis> {
         @Override
         public void activateObject(PooledObject<BinaryJedis> pooledJedis)
                 throws Exception {
-            /*
+
             final BinaryJedis binaryJedis = pooledJedis.getObject();
             if (binaryJedis.getDB() != database) {
                 binaryJedis.select(database);
             }
-            */
+
             //TODO always default database
         }
 

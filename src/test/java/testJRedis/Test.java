@@ -5,7 +5,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.stereotype.Service;
-import proto.RoleVo;
+import proto.TRoleEqu;
 import springJredisCache.JRedisCache;
 
 import javax.annotation.Resource;
@@ -39,29 +39,40 @@ public class Test {
         Test test= (Test) springContext.getBean("test");
 
 
-        RoleVo.Builder builder=RoleVo.newBuilder();
-        builder.setRoleID(1);
-        builder.setRoleName("石头哥哥");
-        builder.setRoleSex(1);
-        RoleVo vo=builder.build();
-
-
-
-        ArrayList<Integer> list=new ArrayList<Integer>();
-        list.add(1);
-        list.add(2);
-        list.add(3);
-
-        //set
-        test.jRedisCache.putList("list", list);
-        for(int i=0;i!=10000;++i){
-            // get
-            list= (ArrayList<Integer>)test. jRedisCache.getList("list");
-
-            for(int value:list){
-                System.out.println("get value from redis:" + value);
-            }
+//        RoleVo.Builder builder=RoleVo.newBuilder();
+//        builder.setRoleID(1);
+//        builder.setRoleName("石头哥哥");
+//        builder.setRoleSex(1);
+//        RoleVo vo=builder.build();
+//
+//
+//
+//        ArrayList<Integer> list=new ArrayList<Integer>();
+//        list.add(1);
+//        list.add(2);
+//        list.add(3);
+//
+//        //set
+//        test.jRedisCache.putList("list", list);
+//        for(int i=0;i!=10000;++i){
+//            // get
+//            list= (ArrayList<Integer>)test. jRedisCache.getList("list");
+//
+//            for(int value:list){
+//                System.out.println("get value from redis:" + value);
+//            }
+//        }
+        String key="t_equ100028";
+        ArrayList<TRoleEqu> equArrayList=new ArrayList<TRoleEqu>();
+        for (int i=0;i!=1000;++i){
+            equArrayList.add(new TRoleEqu());
         }
+        test. jRedisCache.putList(key,equArrayList);
+       ArrayList<TRoleEqu> equArrayList2= (ArrayList<TRoleEqu>)test. jRedisCache.getList(key);
+
+        System.out.println("get value from redis:" + equArrayList2);
+
+        test. jRedisCache.removeList(key);
 
 
     }

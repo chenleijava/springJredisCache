@@ -31,6 +31,7 @@
           <constructor-arg index="3" value="${jredis.timeout}"/>
           <constructor-arg index="4" value="${jredis.password}"/>
     </bean>
+    <!--http://blog.csdn.net/larrylgq/article/details/7402908-->
 
 </beans>
 

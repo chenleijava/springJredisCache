@@ -82,6 +82,8 @@ public class Test {
         test. jRedisCache.removeList(key);
 
 
+
+
     }
 
     @After

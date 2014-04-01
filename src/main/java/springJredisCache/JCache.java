@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 
 /**
- *
+ * 增加订阅 发布接口
  */
 public interface JCache {
 

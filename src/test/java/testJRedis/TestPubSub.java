@@ -36,20 +36,22 @@ public class TestPubSub {
         System.setProperty("java.net.preferIPv4Stack", "true"); //Disable IPv6 in JVM
         springContext = new FileSystemXmlApplicationContext("res/springConfig/spring-context.xml");
         /**初始化spring容器*/
-         testPubSub = (TestPubSub) springContext.getBean("testPubSub");
+        testPubSub = (TestPubSub) springContext.getBean("testPubSub");
 
     }
 
     @org.junit.Test
-    public void publish(){
-        testPubSub.jRedisCache.publish("xxxxsss","123".getBytes());
-       testPubSub.jRedisCache.publish("fod_2", SafeEncoder.encode("456"));
+    public void publish() {
+        for (int num=0;num!=1000;++num ) {
+            testPubSub.jRedisCache.publish("xxxxsss", "123".getBytes());
+            testPubSub.jRedisCache.publish("fod_2", SafeEncoder.encode("456"));
+        }
     }
 
     @org.junit.Test
     public void psubscribe() throws InterruptedException {
         //订阅 处理 指定的消息
-        testPubSub.jRedisCache.psubscribe("xxx*","fod_*");
+        testPubSub.jRedisCache.psubscribe("xxx*", "fod_*");
     }
 
 

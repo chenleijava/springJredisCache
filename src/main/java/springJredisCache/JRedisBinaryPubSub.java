@@ -4,6 +4,11 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.BinaryJedisPubSub;
 import redis.clients.util.SafeEncoder;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * @author 石头哥哥 </br>
  *         springJredisCache </br>
@@ -12,20 +17,26 @@ import redis.clients.util.SafeEncoder;
  *         Package:{@link springJredisCache}</br>
  *         Comment：  处理订阅的消息
  *         subsribe(一般模式设置频道)和psubsribe(使用模式匹配来设置频道)。不管是那种模式都可以设置个数不定的频道
- *
- *
+ *         <p/>
+ *         <p/>
  *         订阅的监听类  ，订阅某个事件  那么会一直在
  *         {@link redis.clients.jedis.BinaryJedisPubSub#process(redis.clients.jedis.Client)} }轮询
  *         直到有订阅的消息发生（注册事件---这里  主要是只channel （或者通配符的表达式）） ，
  *         当然可以订阅 也可以取消  在   onUnsubscribe(byte[] channel, int subscribedChannels) 或则  onPUnsubscribe(byte[] pattern, int subscribedChannels)
  *         中处理取消订阅    ,  当取消一个订阅的时候 subscribedChannels 订阅的计数会减一  直到<=0   ----注意是来子redis的数据哈
  *         {@link redis.clients.jedis.BinaryJedisPubSub#isSubscribed()} }返回false 停止轮询  ！
- *          其中 channel订阅的等价 redis存储的 key
- *          message 等价redis存储的value
- *          为什么叫channel  或许是形象罢了        自己体会 订阅/发布
+ *         其中 channel订阅的等价 redis存储的 key
+ *         message 等价redis存储的value
+ *         为什么叫channel  或许是形象罢了        自己体会 订阅/发布
  */
 @Service
 public class JRedisBinaryPubSub extends BinaryJedisPubSub {
+
+    // 处理订阅消息
+    private static final ExecutorService handleSubscribe =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()
+                    , new PriorityThreadFactory("@+订阅消息处理线程池+@", Thread.NORM_PRIORITY));
+
 
     /**
      * 处理订阅的消息
@@ -34,8 +45,13 @@ public class JRedisBinaryPubSub extends BinaryJedisPubSub {
      * @param message
      */
     @Override
-    public void onMessage(byte[] channel, byte[] message) {
-        System.out.println( SafeEncoder.encode(channel) + "=" +SafeEncoder.encode(message));
+    public void onMessage(final byte[] channel, final byte[] message) {
+        handleSubscribe.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(SafeEncoder.encode(channel) + "=" + SafeEncoder.encode(message));
+            }
+        });
     }
 
     /**
@@ -45,26 +61,29 @@ public class JRedisBinaryPubSub extends BinaryJedisPubSub {
      * @param channel key
      * @param message value
      *                hello*=hello_1=123
-     *
+     *                <p/>
      *                可以将相应的message反序列化为相应的数据类型
      */
     @Override
-    public void onPMessage(byte[] pattern, byte[] channel, byte[] message) {
-        System.out.println(SafeEncoder.encode(pattern) + "=" + SafeEncoder.encode(channel) + "=" +SafeEncoder.encode(message));
+    public void onPMessage(final byte[] pattern, final byte[] channel, final byte[] message) {
+        handleSubscribe.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(SafeEncoder.encode(pattern) + "=" + SafeEncoder.encode(channel) + "=" + SafeEncoder.encode(message));
+            }
+        });
     }
-
-
 
 
     /**
      * 取消订阅（注销）
      *
-     * @param channel          key
-     * @param subscribedChannels             当前订阅的数量
+     * @param channel            key
+     * @param subscribedChannels 当前订阅的数量
      */
     @Override
     public void onUnsubscribe(byte[] channel, int subscribedChannels) {
-        System.out.println("取消订阅channel："+SafeEncoder.encode(channel) + "subscribedChannels=" + subscribedChannels);
+        System.out.println("取消订阅channel：" + SafeEncoder.encode(channel) + "subscribedChannels=" + subscribedChannels);
     }
 
 
@@ -72,23 +91,22 @@ public class JRedisBinaryPubSub extends BinaryJedisPubSub {
      * 取消订阅   按表达式的方式订阅的消息    （注销）
      *
      * @param pattern
-     * @param subscribedChannels           当前订阅的数量
+     * @param subscribedChannels 当前订阅的数量
      */
     @Override
     public void onPUnsubscribe(byte[] pattern, int subscribedChannels) {
-        System.out.println("取消订阅pattern："+SafeEncoder.encode(pattern) + "subscribedChannels=" + subscribedChannels);
+        System.out.println("取消订阅pattern：" + SafeEncoder.encode(pattern) + "subscribedChannels=" + subscribedChannels);
     }
 
 
     /**
-     *
      * 订阅初始化 在{@link springJredisCache.JCache#subscribe(String...)}
-     *
+     * <p/>
      * 保留接口 不做处理
      * 初始化订阅
      *
      * @param channel
-     * @param subscribedChannels      当前订阅的数量
+     * @param subscribedChannels 当前订阅的数量
      */
     @Override
     public void onSubscribe(byte[] channel, int subscribedChannels) {
@@ -99,11 +117,39 @@ public class JRedisBinaryPubSub extends BinaryJedisPubSub {
      * 保留接口 不做处理
      * 初始化按表达式的方式订阅的消息
      *
-     * @param pattern      订阅的消息类型
-     * @param subscribedChannels            订阅的channel数量   from redis
+     * @param pattern            订阅的消息类型
+     * @param subscribedChannels 订阅的channel数量   from redis
      */
     @Override
     public void onPSubscribe(byte[] pattern, int subscribedChannels) {
 
+    }
+
+
+    /**
+     * 线程池工厂
+     */
+    private static class PriorityThreadFactory implements ThreadFactory {
+        private final int _prio;
+        private final String _name;
+        private final AtomicInteger _threadNumber = new AtomicInteger(1);
+        private final ThreadGroup _group;
+
+        public PriorityThreadFactory(String name, int prio) {
+            _prio = prio;
+            _name = name;
+            _group = new ThreadGroup(_name);
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(_group, r, _name + "-" + _threadNumber.getAndIncrement());
+            t.setPriority(_prio);
+            return t;
+        }
+
+        public ThreadGroup getGroup() {
+            return _group;
+        }
     }
 }

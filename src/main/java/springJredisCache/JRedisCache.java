@@ -40,6 +40,8 @@ public class JRedisCache implements JCache {
     @Resource
     private JRedisBinaryPubSub jRedisBinaryPubSub;
 
+//    private static final ExecutorService handleSubscribe= Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());  // 处理订阅消息
+
 
     /**
      * 运行时异常，IO异常，销毁binaryJedis对象
@@ -87,7 +89,7 @@ public class JRedisCache implements JCache {
      * @param channels
      */
     @Override
-    public void subscribe(String... channels) {
+    public void subscribe(final  String... channels) {
         BinaryJedis binaryJedis = null;
         try {
             binaryJedis = jRedisPool.getResource();
@@ -141,7 +143,7 @@ public class JRedisCache implements JCache {
      * @param patterns
      */
     @Override
-    public void psubscribe(String... patterns) {
+    public void psubscribe(final  String... patterns) {
         BinaryJedis binaryJedis = null;
         try {
             binaryJedis = jRedisPool.getResource();

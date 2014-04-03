@@ -17,7 +17,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
  *         Package:{@link springJredisCache}</br>
  *         Comment： 对象池参数设置
  */
-public class JRedisConfig  extends GenericObjectPoolConfig {
+public class JRedisConfig extends GenericObjectPoolConfig {
 
     public JRedisConfig() {
         // defaults to make your life with connection pool easier :)

@@ -12,9 +12,9 @@
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
-          <list>
-              <value>file:res/appConfig/jredis.properties</value>
-          </list>
+            <list>
+                <value>file:res/appConfig/jredis.properties</value>
+            </list>
         </property>
     </bean>
     <!--定时任务配置-->

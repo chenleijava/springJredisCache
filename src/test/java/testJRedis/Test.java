@@ -25,23 +25,20 @@ public class Test {
     @Resource
     private JRedisCache jRedisCache;
 
-   private  FileSystemXmlApplicationContext springContext ;
+    private FileSystemXmlApplicationContext springContext;
+
     @Before
-    public void IntiRes(){
+    public void IntiRes() {
         DOMConfigurator.configure("res/appConfig/log4j.xml");
         System.setProperty("java.net.preferIPv4Stack", "true"); //Disable IPv6 in JVM
         springContext = new FileSystemXmlApplicationContext("res/springConfig/spring-context.xml");
     }
 
 
-
-
-
-
     @org.junit.Test
-    public void  testJRedis() throws InterruptedException {
+    public void testJRedis() throws InterruptedException {
         /**初始化spring容器*/
-        Test test= (Test) springContext.getBean("test");
+        Test test = (Test) springContext.getBean("test");
 
 
 //        RoleVo.Builder builder=RoleVo.newBuilder();
@@ -67,19 +64,19 @@ public class Test {
 //                System.out.println("get value from redis:" + value);
 //            }
 //        }
-        String key="t_equ100028";
-        ArrayList<TRoleEqu> equArrayList=new ArrayList<TRoleEqu>();
-        for (int i=0;i!=1000;++i){
+        String key = "t_equ100028";
+        ArrayList<TRoleEqu> equArrayList = new ArrayList<TRoleEqu>();
+        for (int i = 0; i != 1000; ++i) {
             equArrayList.add(new TRoleEqu());
         }
         Thread.sleep(1000);
 
-       test. jRedisCache.putList(key,equArrayList);
-       ArrayList<TRoleEqu> equArrayList2= (ArrayList<TRoleEqu>)test. jRedisCache.getList(key);
+        String status = test.jRedisCache.putList(key, equArrayList);
+        ArrayList<TRoleEqu> equArrayList2 = (ArrayList<TRoleEqu>) test.jRedisCache.getList(key);
 
         System.out.println("get value from redis:" + equArrayList2);
 
-        test. jRedisCache.removeList(key);
+        test.jRedisCache.removeList(key);
 
 
 
@@ -87,7 +84,7 @@ public class Test {
     }
 
     @After
-    public void closeApp(){
+    public void closeApp() {
         springContext.close();
     }
 

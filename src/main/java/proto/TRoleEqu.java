@@ -4,49 +4,50 @@ import java.io.Serializable;
 
 public class TRoleEqu implements Serializable {
 
-    public TRoleEqu(){}
+    public TRoleEqu() {
+    }
 
-    private Integer equid=0;
+    private Integer equid = 0;
 
-    private Integer equtypeid=0;
+    private Integer equtypeid = 0;
 
-    private Byte itemtype=0;
+    private Byte itemtype = 0;
 
-    private Integer ownerid=0;
+    private Integer ownerid = 0;
 
-    private Byte equpinzhi=0;
+    private Byte equpinzhi = 0;
 
-    private Byte equpinjie=0;
+    private Byte equpinjie = 0;
 
-    private Integer equpinjieexp=0;
+    private Integer equpinjieexp = 0;
 
-    private Integer equlevel=0;
+    private Integer equlevel = 0;
 
-    private Byte equtype=0;
+    private Byte equtype = 0;
 
-    private Byte equlocation=0;
+    private Byte equlocation = 0;
 
-    private Long equtimeout=0l;
+    private Long equtimeout = 0l;
 
-    private Integer equprice=0;
+    private Integer equprice = 0;
 
-    private Boolean equshowbag=false;
+    private Boolean equshowbag = false;
 
-    private Integer effecttype1=0;
+    private Integer effecttype1 = 0;
 
-    private Double effectnum1=0d;
+    private Double effectnum1 = 0d;
 
-    private Double effectnumgrowup1=0d;
+    private Double effectnumgrowup1 = 0d;
 
-    private Integer effecttype2=0;
+    private Integer effecttype2 = 0;
 
-    private Double effectnum2=0d;
+    private Double effectnum2 = 0d;
 
-    private Double effectnumgrowup2=0d;
+    private Double effectnumgrowup2 = 0d;
 
-    private Integer effecttype3=0;
+    private Integer effecttype3 = 0;
 
-    private Double effectnum3=0d;
+    private Double effectnum3 = 0d;
 
     private Double effectnumgrowup3;
 

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.BinaryJedis;
+import redis.clients.util.SafeEncoder;
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -25,16 +26,19 @@ import java.util.Set;
  *         向对象池借用 binaryJedis对象；
  *         close--->returnBrokenResource(binaryJedis) or returnResource(binaryJedis)
  *         如果出现异常（runntime ，io），那么将销毁 binaryJedis对象，否则将其归还到对象池；
+ *
+ *
  */
 @Service
 public class JRedisCache implements JCache {
 
-
     private static final Logger LOGGER = LoggerFactory.getLogger(JRedisCache.class);
-
 
     @Resource
     private JRedisPool jRedisPool;
+
+    @Resource
+    private JRedisBinaryPubSub jRedisBinaryPubSub;
 
 
     /**
@@ -50,6 +54,150 @@ public class JRedisCache implements JCache {
             jRedisPool.returnBrokenResource(binaryJedis); //销毁该对象
         }
     }
+
+    /**
+     * 发布 消息
+     *
+     * @param channel
+     * @param message
+     * @return
+     */
+    @Override
+    public Long publish(String channel, byte[] message) {
+        BinaryJedis binaryJedis = null;
+        try {
+            binaryJedis = jRedisPool.getResource();
+            return binaryJedis.publish(channel.getBytes(), message);
+        } catch (Exception ex) {
+            coverException(ex, jRedisPool, binaryJedis);
+            return null;
+        } finally {
+            if (binaryJedis != null) {
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("close redis connection-{" + binaryJedis.toString() + "}");
+                }
+            }
+        }
+    }
+
+    /**
+     * 订阅指定的消息        订阅得到信息在BinaryJedisPubSub的onMessage(...)方法中进行处理
+     *
+     * @param channels
+     */
+    @Override
+    public void subscribe(String... channels) {
+        BinaryJedis binaryJedis = null;
+        try {
+            binaryJedis = jRedisPool.getResource();
+            final byte[][] ps = new byte[channels.length][];
+            for (int i = 0; i < ps.length; i++) {
+                ps[i] = SafeEncoder.encode(channels[i]);
+            }
+            binaryJedis.subscribe(jRedisBinaryPubSub,ps);
+        } catch (Exception ex) {
+            coverException(ex, jRedisPool, binaryJedis);
+        } finally {
+            if (binaryJedis != null) {
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("close redis connection-{" + binaryJedis.toString() + "}");
+                }
+            }
+        }
+    }
+
+    /**
+     * 取消所有订阅的channel
+     */
+    @Override
+    public void unsubscribe() {
+        jRedisBinaryPubSub.unsubscribe();
+    }
+
+    /**
+     * 取消订阅的channel
+     *
+     * @param channels
+     */
+    @Override
+    public void unsubscribe(String... channels) {
+        final byte[][] ps = new byte[channels.length][];
+        for (int i = 0; i < ps.length; i++) {
+            ps[i] = SafeEncoder.encode(channels[i]);
+        }
+        jRedisBinaryPubSub.unsubscribe(ps);
+    }
+
+
+    /**
+     *
+     * 通常为了适应大多数场景  还是使用这方式订阅吧
+     *
+     * 表达式的方式订阅
+     * 使用模式匹配的方式设置要订阅的消息            订阅得到信息在BinaryJedisPubSub的onMessage(...)方法中进行处理
+     *
+     * @param patterns
+     */
+    @Override
+    public void psubscribe(String... patterns) {
+        BinaryJedis binaryJedis = null;
+        try {
+            binaryJedis = jRedisPool.getResource();
+            final byte[][] ps = new byte[patterns.length][];
+            for (int i = 0; i < ps.length; i++) {
+                ps[i] = SafeEncoder.encode(patterns[i]);
+            }
+            binaryJedis.psubscribe(jRedisBinaryPubSub,ps);
+        } catch (Exception ex) {
+            coverException(ex, jRedisPool, binaryJedis);
+        } finally {
+            if (binaryJedis != null) {
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("close redis connection-{" + binaryJedis.toString() + "}");
+                }
+            }
+        }
+    }
+
+    /**
+     * 取消所有订阅的channel
+     */
+    @Override
+    public void punsubscribe() {
+        jRedisBinaryPubSub.punsubscribe();
+    }
+
+
+    /**
+     * 取消订阅的channel
+     *
+     * @param patterns
+     */
+    @Override
+    public void punsubscribe(String... patterns) {
+        BinaryJedis binaryJedis = null;
+        try {
+            binaryJedis = jRedisPool.getResource();
+            final byte[][] ps = new byte[patterns.length][];
+            for (int i = 0; i < ps.length; i++) {
+                ps[i] = SafeEncoder.encode(patterns[i]);
+            }
+            jRedisBinaryPubSub.punsubscribe(ps);
+        } catch (Exception ex) {
+            coverException(ex, jRedisPool, binaryJedis);
+        } finally {
+            if (binaryJedis != null) {
+                jRedisPool.returnResource(binaryJedis);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("close redis connection-{" + binaryJedis.toString() + "}");
+                }
+            }
+        }
+    }
+
 
     /**
      * 获取 redis information
@@ -148,13 +296,14 @@ public class JRedisCache implements JCache {
      * @param list
      */
     @Override
-    public void putList(String key, ArrayList<?> list) {
+    public String putList(String key, ArrayList<?> list) {
         BinaryJedis binaryJedis = null;
         try {
             binaryJedis = jRedisPool.getResource();
-            binaryJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+            return binaryJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
         } catch (Exception ex) {
             coverException(ex, jRedisPool, binaryJedis);
+            return "failed";
         } finally {
             if (binaryJedis != null) {
                 jRedisPool.returnResource(binaryJedis);

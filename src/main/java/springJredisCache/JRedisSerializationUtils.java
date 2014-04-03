@@ -28,23 +28,25 @@ import java.io.*;
  *         Package:{@link springJredisCache}</br>
  *         Comment： 对象序列化工具类    序列化方案基于 FST - Fast Serialization
  *         https://github.com/flapdoodle-oss/de.flapdoodle.fast-serialization
- *
+ *         <p/>
  *         注意生产中推荐使用FST序列化方案
  */
 public class JRedisSerializationUtils {
 
 
-    public JRedisSerializationUtils(){}
+    public JRedisSerializationUtils() {
+    }
 
     private static final Kryo kryo = new Kryo();
 
     // Serialize
     //-----------------------------------------------------------------------
+
     /**
      * <p>Serializes an <code>Object</code> to a byte array for
      * storage/serialization.</p>
      *
-     * @param obj  the object to serialize to bytes
+     * @param obj the object to serialize to bytes
      * @return a byte[] with the converted Serializable
      * @throws JRedisCacheException (runtime) if the serialization fails
      */
@@ -61,14 +63,14 @@ public class JRedisSerializationUtils {
             throw new JRedisCacheException(ex);
         } finally {
             try {
-                obj=null;
+                obj = null;
                 if (out != null) {
                     out.close();    //call flush byte buffer
-                    out=null;
+                    out = null;
                 }
-                if (byteArrayOutputStream!=null){
+                if (byteArrayOutputStream != null) {
                     byteArrayOutputStream.close();
-                    byteArrayOutputStream=null;
+                    byteArrayOutputStream = null;
                 }
             } catch (IOException ex) {
                 // ignore close exception
@@ -79,13 +81,14 @@ public class JRedisSerializationUtils {
 
     // Deserialize
     //-----------------------------------------------------------------------
+
     /**
      * <p>Deserializes a single <code>Object</code> from an array of bytes.</p>
      *
-     * @param objectData  the serialized object, must not be null
+     * @param objectData the serialized object, must not be null
      * @return the deserialized object
      * @throws IllegalArgumentException if <code>objectData</code> is <code>null</code>
-     * @throws JRedisCacheException (runtime) if the serialization fails
+     * @throws JRedisCacheException     (runtime) if the serialization fails
      */
     public static Object fastDeserialize(byte[] objectData) {
         ByteArrayInputStream byteArrayInputStream = null;
@@ -101,14 +104,14 @@ public class JRedisSerializationUtils {
             throw new JRedisCacheException(ex);
         } finally {
             try {
-                objectData=null;
+                objectData = null;
                 if (in != null) {
                     in.close();
-                    in=null;
+                    in = null;
                 }
-                if (byteArrayInputStream!=null){
+                if (byteArrayInputStream != null) {
                     byteArrayInputStream.close();
-                    byteArrayInputStream=null;
+                    byteArrayInputStream = null;
                 }
             } catch (IOException ex) {
                 // ignore close exception
@@ -117,33 +120,35 @@ public class JRedisSerializationUtils {
     }
 
     //基于kryo序列换方案
+
     /**
      * 将对象序列化为字节数组
+     *
      * @param obj
-     * @return   字节数组
+     * @return 字节数组
      * @throws JRedisCacheException
      */
     public static byte[] kryoSerialize(Object obj) throws JRedisCacheException {
-        if (obj==null) throw new JRedisCacheException("obj can not be null");
-        ByteArrayOutputStream byteArrayOutputStream=null;
-        Output output =null;
+        if (obj == null) throw new JRedisCacheException("obj can not be null");
+        ByteArrayOutputStream byteArrayOutputStream = null;
+        Output output = null;
         try {
-            byteArrayOutputStream=new ByteArrayOutputStream();      //缓冲数据
+            byteArrayOutputStream = new ByteArrayOutputStream();      //缓冲数据
             output = new Output(byteArrayOutputStream);
             kryo.writeClassAndObject(output, obj);
             return output.toBytes();
-        }catch (JRedisCacheException e){
+        } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Serialize obj exception");
-        }finally {
+        } finally {
             try {
-                obj=null;
-                if (byteArrayOutputStream!=null){
+                obj = null;
+                if (byteArrayOutputStream != null) {
                     byteArrayOutputStream.close();
-                    byteArrayOutputStream=null;
+                    byteArrayOutputStream = null;
                 }
-                if (output!=null){
+                if (output != null) {
                     output.close();   /** Writes the buffered bytes to the underlying OutputStream, if any .flush();. */
-                    output=null;
+                    output = null;
                 }
             } catch (IOException ee) {
                 ee.printStackTrace();
@@ -153,37 +158,38 @@ public class JRedisSerializationUtils {
 
     /**
      * 将字节数组反序列化为对象
-     * @param bytes    字节数组
-     * @return           object
+     *
+     * @param bytes 字节数组
+     * @return object
      * @throws JRedisCacheException
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
         Input input = null;
-        if (bytes==null) throw new JRedisCacheException("bytes can not be null");
+        if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
             input = new Input(bytes);
             return kryo.readClassAndObject(input);
-        }catch (JRedisCacheException e){
+        } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Deserialize bytes exception");
-        }finally {
-            bytes=null;
-            if (input!=null){
+        } finally {
+            bytes = null;
+            if (input != null) {
                 input.close();
-                input=null;
+                input = null;
             }
         }
     }
 
 
     //jdk原生序列换方案
+
     /**
-     *
      * @param obj
      * @return
      */
     public static byte[] jserialize(Object obj) {
         ObjectOutputStream oos = null;
-        ByteArrayOutputStream baos =null;
+        ByteArrayOutputStream baos = null;
         try {
             baos = new ByteArrayOutputStream();
             oos = new ObjectOutputStream(baos);
@@ -202,13 +208,12 @@ public class JRedisSerializationUtils {
     }
 
     /**
-     *
      * @param bits
      * @return
      */
     public static Object jdeserialize(byte[] bits) {
         ObjectInputStream ois = null;
-        ByteArrayInputStream bais =null;
+        ByteArrayInputStream bais = null;
         try {
             bais = new ByteArrayInputStream(bits);
             ois = new ObjectInputStream(bais);
@@ -226,19 +231,18 @@ public class JRedisSerializationUtils {
     }
 
 
-   // 基于protobuffer的序列化方案
+    // 基于protobuffer的序列化方案
 
     /**
-     *
-     * @param bytes        字节数据
-     * @param messageLite  序列化对应的类型
+     * @param bytes       字节数据
+     * @param messageLite 序列化对应的类型
      * @return
      * @throws JRedisCacheException
      */
-    public static MessageLite protoDeserialize(byte[] bytes,MessageLite messageLite) throws JRedisCacheException{
-        assert (bytes!=null&&messageLite!=null);
+    public static MessageLite protoDeserialize(byte[] bytes, MessageLite messageLite) throws JRedisCacheException {
+        assert (bytes != null && messageLite != null);
         try {
-            return  messageLite.getParserForType().parsePartialFrom(CodedInputStream.newInstance(bytes),ExtensionRegistryLite.getEmptyRegistry());
+            return messageLite.getParserForType().parsePartialFrom(CodedInputStream.newInstance(bytes), ExtensionRegistryLite.getEmptyRegistry());
         } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
             return null;
@@ -246,14 +250,13 @@ public class JRedisSerializationUtils {
     }
 
     /**
-     *
-     * @param messageLite  序列化对应的类型
+     * @param messageLite 序列化对应的类型
      * @return
      * @throws JRedisCacheException
      */
-    public static byte[] protoSerialize(MessageLite messageLite) throws JRedisCacheException{
-        assert (messageLite!=null);
-        return  messageLite.toByteArray();
+    public static byte[] protoSerialize(MessageLite messageLite) throws JRedisCacheException {
+        assert (messageLite != null);
+        return messageLite.toByteArray();
     }
 
 

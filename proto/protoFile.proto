@@ -1,14 +1,14 @@
 package proto;
 
 
-option java_multiple_files =true;
+option java_multiple_files = true;
 
 
 // 角色vo      change!!!
-message RoleVo{
-    required uint32 roleID=1;//角色ID
-    optional string  roleName=2;//角色名称
-    optional  uint32   roleSex=3;//角色性别
+message RoleVo {
+    required uint32 roleID = 1; //角色ID
+    optional string roleName = 2; //角色名称
+    optional uint32 roleSex = 3; //角色性别
 
 }
 

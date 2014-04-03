@@ -24,7 +24,7 @@
         <repository>
             <id>ehcache</id>
             <name>local ehcache</name>
-            <url>http://oss.sonatype.org/ </url>
+            <url>http://oss.sonatype.org/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -103,13 +103,11 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>2.4.2</version>
         </dependency>
-
 
 
         <dependency>
@@ -232,20 +230,24 @@
                         </goals>
                         <configuration>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>testJRedis.userBean</mainClass>
                                 </transformer>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.tooling</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.handlers</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.schemas</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -258,16 +260,16 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.7</version>
                 <executions>
-                <execution>
-                <id>attach-javadoc</id>
-                <phase>package</phase>
-                <goals>
-                <goal>jar</goal>
-                </goals>
-                </execution>
+                    <execution>
+                        <id>attach-javadoc</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <configuration>
-                <charset>UTF-8</charset>
+                    <charset>UTF-8</charset>
                 </configuration>
             </plugin>
         </plugins>

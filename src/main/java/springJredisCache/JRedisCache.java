@@ -11,6 +11,7 @@ import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.util.SafeEncoder;
 
+
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.Serializable;
@@ -41,54 +42,10 @@ public class JRedisCache implements JCache {
     @Resource
     private JRedisBinaryPubSub jRedisBinaryPubSub;
 
-
     @Resource
     private ShardedJedisPool shardedJedisPool;
-
-    /**
-     *
-     * @param key
-     * @param value
-     */
-    @Deprecated
-    public void set(String key,ArrayList<?> value){
-        ShardedJedis shardedJedis = null;
-        try {
-            shardedJedis = shardedJedisPool.getResource();
-            shardedJedis.set(key.getBytes(),JRedisSerializationUtils.fastSerialize(value));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            if (shardedJedisPool != null) {
-                shardedJedisPool.returnResource(shardedJedis);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("close redis connection-{" + shardedJedis.toString() + "}");
-                }
-            }
-        }
-    }
-    /**
-     *
-     * @param key
-     */
-    @Deprecated
-    public ArrayList<?> get(String key){
-        ShardedJedis shardedJedis = null;
-        try {
-            shardedJedis = shardedJedisPool.getResource();
-           return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize( shardedJedis.get(key.getBytes()));
-        } catch (Exception ex) {
-           return null;
-        } finally {
-            if (shardedJedisPool != null) {
-                shardedJedisPool.returnResource(shardedJedis);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("close redis connection-{" + shardedJedis.toString() + "}");
-                }
-            }
-        }
-    }
-
+    
+    private static final boolean redisShared=false;
 
     /**
      * 运行时异常，IO异常，销毁jedis对象
@@ -101,6 +58,20 @@ public class JRedisCache implements JCache {
         if (jedis == null) throw new NullPointerException();
         if (ex instanceof JRedisCacheException || ex instanceof IOException) {
             jedisPool.returnBrokenResource(jedis); //销毁该对象
+        }
+    }
+
+    /**
+     * 运行时异常，IO异常，销毁jedis对象
+     *
+     * @param ex
+     * @param shardedJedisPool
+     * @param shardedJedis
+     */
+    protected void coverShardJedisException(Exception ex, ShardedJedisPool shardedJedisPool, ShardedJedis shardedJedis) {
+        if (shardedJedis == null) throw new NullPointerException();
+        if (ex instanceof JRedisCacheException || ex instanceof IOException) {
+            shardedJedisPool.returnBrokenResource(shardedJedis); //销毁该对象
         }
     }
 
@@ -257,7 +228,6 @@ public class JRedisCache implements JCache {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
-            LOGGER.info(jedis.toString());
             return jedis.info();
         } catch (Exception ex) {
             coverException(ex, jedisPool, jedis);
@@ -272,29 +242,6 @@ public class JRedisCache implements JCache {
         return null;
     }
 
-//    /**
-//     * @param key
-//     * @return
-//     * @throws JRedisCacheException
-//     */
-//    @Override
-//    public ArrayList<?> getList(String key)  {
-//        Jedis jedis=null;
-//        try {
-//            jedis=jedisPool.getResource();
-//            byte[] objectByte=jedis.get(key.getBytes());
-//            return (ArrayList<?>) JRedisSerializationUtils.kryoDeserialize(objectByte);
-//        }catch (Exception ex){
-//            coverException(ex,jedisPool,jedis);
-//        }finally {
-//            if (jedis!=null){
-//                    jedisPool.returnResource(jedis);
-//            }
-//
-//        }
-//        return null;
-//    }
-
     /**
      * @param key
      * @return
@@ -302,41 +249,37 @@ public class JRedisCache implements JCache {
      */
     @Override
     public ArrayList<?> getList(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            byte[] objectByte = jedis.get(key.getBytes());
-            return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                byte[] objectByte = shardedJedis.get(key.getBytes());
+                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedisPool != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
             }
+            return null;
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                byte[] objectByte = jedis.get(key.getBytes());
+                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
 
+            }
+            return null;
         }
-        return null;
     }
-
-
-//    /**
-//     * @param key
-//     * @param list
-//     */
-//    @Override
-//    public void putList(String key, ArrayList<?> list)  {
-//        Jedis jedis=null;
-//        try {
-//            jedis=jedisPool.getResource();
-//            jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(list));
-//        }catch (Exception ex){
-//            coverException(ex,jedisPool,jedis);
-//        } finally {
-//            if (jedis!=null){
-//                jedisPool.returnResource(jedis);
-//            }
-//        }
-//    }
 
 
     /**
@@ -345,16 +288,31 @@ public class JRedisCache implements JCache {
      */
     @Override
     public String putList(String key, ArrayList<?> list) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            return jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-            return "failed";
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                return shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+                return "failed";
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                return jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+                return "failed";
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -367,18 +325,33 @@ public class JRedisCache implements JCache {
      */
     @Override
     public FastTable<?> getFastTable(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            return (FastTable<?>) JRedisSerializationUtils.kryoDeserialize(jedis.get(key.getBytes()));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                return (FastTable<?>) JRedisSerializationUtils.fastDeserialize(shardedJedis.get(key.getBytes()));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
             }
+            return null;
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                return (FastTable<?>) JRedisSerializationUtils.fastDeserialize(jedis.get(key.getBytes()));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
+            }
+            return null;
         }
-        return null;
     }
 
 
@@ -388,15 +361,29 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void putFastTable(String key, FastTable<?> list) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(list));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -409,15 +396,29 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void removeList(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.del(key.getBytes());
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                shardedJedis.del(key.getBytes());
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                jedis.del(key.getBytes());
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -429,15 +430,29 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void putFastMap(String key, FastMap<?, ?> fastMap) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(fastMap));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(fastMap));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(fastMap));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -450,19 +465,35 @@ public class JRedisCache implements JCache {
      */
     @Override
     public FastMap<?, ?> getFastMap(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            return (FastMap<?, ?>) JRedisSerializationUtils.kryoDeserialize(jedis.get(key.getBytes()));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                return (FastMap<?, ?>) JRedisSerializationUtils.fastDeserialize(shardedJedis.get(key.getBytes()));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
             }
+            return null;
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                return (FastMap<?, ?>) JRedisSerializationUtils.fastDeserialize(jedis.get(key.getBytes()));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
+            }
+            return null;
         }
-        return null;
     }
+
 
     /**
      * Remove an item from the cache
@@ -471,15 +502,29 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void removeFastMap(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.del(key.getBytes());
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                shardedJedis.del(key.getBytes());
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                jedis.del(key.getBytes());
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -493,19 +538,35 @@ public class JRedisCache implements JCache {
      */
     @Override
     public Serializable getObject(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            return (Serializable) JRedisSerializationUtils.kryoDeserialize(jedis.get(key.getBytes()));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                return (Serializable) JRedisSerializationUtils.fastDeserialize(shardedJedis.get(key.getBytes()));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
             }
+            return null;
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                return (Serializable) JRedisSerializationUtils.fastDeserialize(jedis.get(key.getBytes()));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
+            }
+            return null;
         }
-        return null;
     }
+
 
     /**
      * Add an item to the cache, nontransactionally, with
@@ -517,15 +578,29 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void putObject(String key, Serializable value) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(value));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -537,38 +612,73 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void removeObject(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.del(key.getBytes());
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                shardedJedis.del(key.getBytes());
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                jedis.del(key.getBytes());
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
 
+
     @Override
     public FastTable<String> keys() {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            FastTable<String> keys = new FastTable<String>();
-            Set<byte[]> list = jedis.keys(String.valueOf("*").getBytes());
-            for (byte[] bs : list) {
-                keys.addLast(bs == null ? null : (String) JRedisSerializationUtils.kryoDeserialize(bs));
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                FastTable<String> keys = new FastTable<String>();
+                Set<byte[]> list = shardedJedis.hkeys(String.valueOf("*").getBytes());
+                for (byte[] bs : list) {
+                    keys.addLast(bs == null ? null : (String) JRedisSerializationUtils.fastDeserialize(bs));
+                }
+                return keys;
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
             }
-            return keys;
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+            return null;
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                FastTable<String> keys = new FastTable<String>();
+                Set<byte[]> list = jedis.keys(String.valueOf("*").getBytes());
+                for (byte[] bs : list) {
+                    keys.addLast(bs == null ? null : (String) JRedisSerializationUtils.fastDeserialize(bs));
+                }
+                return keys;
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     /**
@@ -576,22 +686,42 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void destroy() {
-        FastTable<String> keys = keys();
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            for (String key : keys) {
-                //After the timeout the key will be
-                // automatically deleted by the server.
-                jedis.expire(key.getBytes(), 0);
+        if (redisShared) {
+            FastTable<String> keys = keys();
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                for (String key : keys) {
+                    //After the timeout the key will be
+                    // automatically deleted by the server.
+                    shardedJedis.expire(key.getBytes(), 0);
+                }
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
             }
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        } else {
+            FastTable<String> keys = keys();
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                for (String key : keys) {
+                    //After the timeout the key will be
+                    // automatically deleted by the server.
+                    jedis.expire(key.getBytes(), 0);
+                }
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
+
     }
 
     /**
@@ -602,15 +732,29 @@ public class JRedisCache implements JCache {
      */
     @Override
     public void addQueue(String key, Serializable value) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.lpush(key.getBytes(), JRedisSerializationUtils.kryoSerialize(value));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                shardedJedis.lpush(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                jedis.lpush(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -622,16 +766,31 @@ public class JRedisCache implements JCache {
      */
     @Override
     public Serializable pollFromQueue(String key) {
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            return (Serializable) JRedisSerializationUtils.kryoDeserialize(jedis.rpop(key.getBytes()));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-            return null;             // if exception  return null ;
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                return (Serializable) JRedisSerializationUtils.fastDeserialize(shardedJedis.rpop(key.getBytes()));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+                return null;             // if exception  return null ;
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                return (Serializable) JRedisSerializationUtils.fastDeserialize(jedis.rpop(key.getBytes()));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+                return null;             // if exception  return null ;
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
             }
         }
     }
@@ -643,21 +802,40 @@ public class JRedisCache implements JCache {
      */
     @Override
     public Serializable peekFromQueue(String key) {
-        Jedis jedis = null;
-        Serializable obj = null;
-        try {
-            jedis = jedisPool.getResource();
-            byte[] keyBytes = key.getBytes();
-            obj = (Serializable) JRedisSerializationUtils.kryoDeserialize(jedis.rpop(keyBytes));
-            //return to queue
-            jedis.lpush(keyBytes, JRedisSerializationUtils.kryoSerialize(obj));
-        } catch (Exception ex) {
-            coverException(ex, jedisPool, jedis);
-        } finally {
-            if (jedis != null) {
-                jedisPool.returnResource(jedis);
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            Serializable obj = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                byte[] keyBytes = key.getBytes();
+                obj = (Serializable) JRedisSerializationUtils.fastDeserialize(shardedJedis.rpop(keyBytes));
+                //return to queue
+                shardedJedis.lpush(keyBytes, JRedisSerializationUtils.fastSerialize(obj));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
             }
+            return obj;
+        } else {
+            Jedis jedis = null;
+            Serializable obj = null;
+            try {
+                jedis = jedisPool.getResource();
+                byte[] keyBytes = key.getBytes();
+                obj = (Serializable) JRedisSerializationUtils.fastDeserialize(jedis.rpop(keyBytes));
+                //return to queue
+                jedis.lpush(keyBytes, JRedisSerializationUtils.fastSerialize(obj));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
+            }
+            return obj;
         }
-        return obj;
     }
 }

@@ -44,7 +44,8 @@ public class JRedisCache implements JCache {
 
     @Resource
     private ShardedJedisPool shardedJedisPool;
-    
+
+    //客户端集群
     private static final boolean redisShared=false;
 
     /**

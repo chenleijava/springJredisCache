@@ -54,7 +54,6 @@ public class TestPubSub {
         testPubSub.jRedisCache.psubscribe("xxx*", "fod_*");
     }
 
-
     @After
     public void closeApp() {
         springContext.close();

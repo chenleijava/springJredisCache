@@ -71,8 +71,8 @@ public class Test {
         }
         Thread.sleep(1000);
 
-        String status = test.jRedisCache.putList(key, equArrayList);
-        ArrayList<TRoleEqu> equArrayList2 = (ArrayList<TRoleEqu>) test.jRedisCache.getList(key);
+        test.jRedisCache.set(key, equArrayList);
+        ArrayList<TRoleEqu> equArrayList2 = (ArrayList<TRoleEqu>) test.jRedisCache.get(key);
 
         System.out.println("get value from redis:" + equArrayList2);
 

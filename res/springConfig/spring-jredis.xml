@@ -12,7 +12,6 @@
         http://www.springframework.org/schema/beans/spring-beans-3.2.xsd ">
 
 
-
     <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
         <property name="maxTotal" value="${jredis.pool.maxTotal}"/>
         <property name="maxWaitMillis" value="${jredis.pool.maxWaitMillis}"/>
@@ -27,20 +26,32 @@
         <constructor-arg index="0" ref="jedisPoolConfig"/>
         <constructor-arg index="1" value="${jredis.master.ip}"/>
         <constructor-arg index="2" value="${jredis.master.port}"/>
-        <constructor-arg index="3" value="${jredis.timeout}"/>
-        <constructor-arg index="4" value="${jredis.password}"/>
+        <constructor-arg index="3" value="${jredis.master.timeout}"/>
+        <constructor-arg index="4" value="${jredis.master.password}"/>
     </bean>
 
 
-    <!--slave cache only read-->
-    <!--<bean id="jRedisPool_Slave" class="com.dc.gameserver.extComponents.springJredisCache.JRedisPool">-->
-    <!--<constructor-arg index="0" ref="jRedisConfig"/>-->
-    <!--<constructor-arg index="1" value="${jredis-slave.ip}"/>-->
-    <!--<constructor-arg index="2" value="${jredis-slave.port}"/>-->
-    <!--<constructor-arg index="3" value="${jredis.timeout}"/>-->
-    <!--</bean>-->
-
-
+    <bean id="shardedJedisPool" class="redis.clients.jedis.ShardedJedisPool" destroy-method="destroy">
+        <constructor-arg index="0" ref="jedisPoolConfig"/>
+        <constructor-arg index="1">
+            <list>
+                <bean class="redis.clients.jedis.JedisShardInfo">
+                    <constructor-arg index="0" value="${jredis.master.ip}"/>
+                    <constructor-arg index="1" value="${jredis.master.port}"/>
+                    <constructor-arg index="2" value="${jredis.master.timeout}"/>
+                    <constructor-arg index="3" value="${jredis.master.weight}"/>
+                    <property name="password" value="${jredis.master.password}"/>
+                </bean>
+                <bean class="redis.clients.jedis.JedisShardInfo">
+                    <constructor-arg index="0" value="${jredis.slave.ip}"/>
+                    <constructor-arg index="1" value="${jredis.slave.port}"/>
+                    <constructor-arg index="2" value="${jredis.slave.timeout}"/>
+                    <constructor-arg index="3" value="${jredis.slave.weight}"/>
+                    <property name="password" value="${jredis.slave.password}"/>
+                </bean>
+            </list>
+        </constructor-arg>
+    </bean>
 
 </beans>
 

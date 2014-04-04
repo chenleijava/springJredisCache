@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.ShardedJedis;
+import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.util.SafeEncoder;
 
 import javax.annotation.Resource;
@@ -27,8 +29,6 @@ import java.util.Set;
  *         向对象池借用 jedis对象；
  *         close--->returnBrokenResource(jedis) or returnResource(jedis)
  *         如果出现异常（runntime ，io），那么将销毁 jedis对象，否则将其归还到对象池；
- *
- *
  */
 @Service
 public class JRedisCache implements JCache {
@@ -40,6 +40,55 @@ public class JRedisCache implements JCache {
 
     @Resource
     private JRedisBinaryPubSub jRedisBinaryPubSub;
+
+
+    @Resource
+    private ShardedJedisPool shardedJedisPool;
+
+    /**
+     *
+     * @param key
+     * @param value
+     */
+    public void set(String key,ArrayList<?> value){
+        ShardedJedis shardedJedis = null;
+        try {
+            shardedJedis = shardedJedisPool.getResource();
+            shardedJedis.set(key.getBytes(),JRedisSerializationUtils.fastSerialize(value));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (shardedJedisPool != null) {
+                shardedJedisPool.returnResource(shardedJedis);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("close redis connection-{" + shardedJedis.toString() + "}");
+                }
+            }
+        }
+    }
+
+
+    /**
+     *
+     * @param key
+     */
+    public ArrayList<?> get(String key){
+        ShardedJedis shardedJedis = null;
+        try {
+            shardedJedis = shardedJedisPool.getResource();
+           return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize( shardedJedis.get(key.getBytes()));
+        } catch (Exception ex) {
+           return null;
+        } finally {
+            if (shardedJedisPool != null) {
+                shardedJedisPool.returnResource(shardedJedis);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("close redis connection-{" + shardedJedis.toString() + "}");
+                }
+            }
+        }
+    }
+
 
 
     /**
@@ -88,7 +137,7 @@ public class JRedisCache implements JCache {
      * @param channels
      */
     @Override
-    public void subscribe(final  String... channels) {
+    public void subscribe(final String... channels) {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
@@ -96,7 +145,7 @@ public class JRedisCache implements JCache {
             for (int i = 0; i < ps.length; i++) {
                 ps[i] = SafeEncoder.encode(channels[i]);
             }
-            jedis.subscribe(jRedisBinaryPubSub,ps);
+            jedis.subscribe(jRedisBinaryPubSub, ps);
         } catch (Exception ex) {
             coverException(ex, jedisPool, jedis);
         } finally {
@@ -133,16 +182,15 @@ public class JRedisCache implements JCache {
 
 
     /**
-     *
      * 通常为了适应大多数场景  还是使用这方式订阅吧
-     *
+     * <p/>
      * 表达式的方式订阅
      * 使用模式匹配的方式设置要订阅的消息            订阅得到信息在JedisPubSub的onMessage(...)方法中进行处理
      *
      * @param patterns
      */
     @Override
-    public void psubscribe(final  String... patterns) {
+    public void psubscribe(final String... patterns) {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
@@ -150,7 +198,7 @@ public class JRedisCache implements JCache {
             for (int i = 0; i < ps.length; i++) {
                 ps[i] = SafeEncoder.encode(patterns[i]);
             }
-            jedis.psubscribe(jRedisBinaryPubSub,ps);
+            jedis.psubscribe(jRedisBinaryPubSub, ps);
         } catch (Exception ex) {
             coverException(ex, jedisPool, jedis);
         } finally {

@@ -1,1 +1,1 @@
-redis-cli.exe -h 127.0.0.1 -p 8888 shutdown
+redis-cli.exe -h 127.0.0.1 -p 9999 shutdown

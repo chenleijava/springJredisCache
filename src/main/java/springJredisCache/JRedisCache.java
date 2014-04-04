@@ -50,6 +50,7 @@ public class JRedisCache implements JCache {
      * @param key
      * @param value
      */
+    @Deprecated
     public void set(String key,ArrayList<?> value){
         ShardedJedis shardedJedis = null;
         try {
@@ -66,12 +67,11 @@ public class JRedisCache implements JCache {
             }
         }
     }
-
-
     /**
      *
      * @param key
      */
+    @Deprecated
     public ArrayList<?> get(String key){
         ShardedJedis shardedJedis = null;
         try {
@@ -88,7 +88,6 @@ public class JRedisCache implements JCache {
             }
         }
     }
-
 
 
     /**

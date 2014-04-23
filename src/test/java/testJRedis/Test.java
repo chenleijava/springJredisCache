@@ -64,21 +64,24 @@ public class Test {
 //                System.out.println("get value from redis:" + value);
 //            }
 //        }
-        String key = "t_equ100028";
+        String key = "rolename";
+        String  filed="role";
         ArrayList<TRoleEqu> equArrayList = new ArrayList<TRoleEqu>();
         for (int i = 0; i != 1000; ++i) {
             equArrayList.add(new TRoleEqu());
         }
         Thread.sleep(1000);
 
-        test.jRedisCache.putList(key, equArrayList);
-        ArrayList<TRoleEqu> equArrayList2 = (ArrayList<TRoleEqu>) test.jRedisCache.getList(key);
+        test.jRedisCache.putList(key,filed, equArrayList);
+        ArrayList<TRoleEqu> equArrayList2 = (ArrayList<TRoleEqu>) test.jRedisCache.getList(key,filed);
 
+//
         System.out.println("get value from redis:" + equArrayList2);
+//
+//        test.jRedisCache.removeList(key);
 
-        test.jRedisCache.removeList(key);
-
-
+//        FastTable<String> roleofferinfos= (FastTable<String>)test. jRedisCache.getFastTable(key);
+//        System.out.println("get value from redis:" + roleofferinfos);
 
 
     }

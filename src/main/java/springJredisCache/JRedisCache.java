@@ -243,6 +243,71 @@ public class JRedisCache implements JCache {
         return null;
     }
 
+    @Override
+    public ArrayList<?> getList(String key, String filed) {
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                byte[] objectByte = shardedJedis.get(key.getBytes());
+                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+            } finally {
+                if (shardedJedisPool != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+            return null;
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                byte[] objectByte = jedis.hget(key.getBytes(), filed.getBytes());
+                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
+
+            }
+            return null;
+        }
+    }
+
+    @Override
+    public String putList(String key, String filed, ArrayList<?> list) {
+        if (redisShared) {
+            ShardedJedis shardedJedis = null;
+            try {
+                shardedJedis = shardedJedisPool.getResource();
+                return shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+            } catch (Exception ex) {
+                coverShardJedisException(ex, shardedJedisPool, shardedJedis);
+                return "failed";
+            } finally {
+                if (shardedJedis != null) {
+                    shardedJedisPool.returnResource(shardedJedis);
+                }
+            }
+        } else {
+            Jedis jedis = null;
+            try {
+                jedis = jedisPool.getResource();
+                return String.valueOf(jedis.hset(key.getBytes(), filed.getBytes(), JRedisSerializationUtils.fastSerialize(list)));
+            } catch (Exception ex) {
+                coverException(ex, jedisPool, jedis);
+                return "failed";
+            } finally {
+                if (jedis != null) {
+                    jedisPool.returnResource(jedis);
+                }
+            }
+        }
+    }
+
     /**
      * @param key
      * @return
@@ -317,6 +382,10 @@ public class JRedisCache implements JCache {
             }
         }
     }
+
+
+
+
 
 
     /**

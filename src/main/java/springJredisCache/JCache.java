@@ -65,6 +65,25 @@ public interface JCache {
      */
     public String info();
 
+
+    /**
+     *
+     * @param key
+     * @param filed
+     * @return
+     */
+    public Object getList(String key,String filed);
+
+    /**
+     *
+     * @param key
+     * @param filed
+     * @param list
+     * @return
+     */
+    public String putList(String key, String filed ,ArrayList<?> list);
+
+
     /**
      * @param key
      * @return

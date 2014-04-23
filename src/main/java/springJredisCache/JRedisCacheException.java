@@ -5,6 +5,8 @@ package springJredisCache;
  */
 public class JRedisCacheException extends RuntimeException {
 
+    private static final long serialVersionUID = -2282812710637100053L;
+
     public JRedisCacheException(String s) {
         super(s);
     }

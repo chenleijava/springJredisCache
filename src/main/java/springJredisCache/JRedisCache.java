@@ -249,8 +249,8 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                byte[] objectByte = shardedJedis.get(key.getBytes());
-                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+                byte[] objectByte = shardedJedis.hget(key.getBytes(), filed.getBytes());
+                return (ArrayList<?>) JRedisSerializationUtils.kryoDeserialize(objectByte);
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -264,7 +264,7 @@ public class JRedisCache implements JCache {
             try {
                 jedis = jedisPool.getResource();
                 byte[] objectByte = jedis.hget(key.getBytes(), filed.getBytes());
-                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+               return (ArrayList<?>) JRedisSerializationUtils.kryoDeserialize(objectByte);
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -283,7 +283,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                return shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+               return String.valueOf(shardedJedis.hset(key.getBytes(), filed.getBytes(), JRedisSerializationUtils.kryoSerialize(list)));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
                 return "failed";
@@ -296,7 +296,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                return String.valueOf(jedis.hset(key.getBytes(), filed.getBytes(), JRedisSerializationUtils.fastSerialize(list)));
+               return String.valueOf(jedis.hset(key.getBytes(), filed.getBytes(), JRedisSerializationUtils.kryoSerialize(list)));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
                 return "failed";
@@ -320,7 +320,7 @@ public class JRedisCache implements JCache {
             try {
                 shardedJedis = shardedJedisPool.getResource();
                 byte[] objectByte = shardedJedis.get(key.getBytes());
-                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+                return (ArrayList<?>) JRedisSerializationUtils.kryoDeserialize(objectByte);
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -334,7 +334,7 @@ public class JRedisCache implements JCache {
             try {
                 jedis = jedisPool.getResource();
                 byte[] objectByte = jedis.get(key.getBytes());
-                return (ArrayList<?>) JRedisSerializationUtils.fastDeserialize(objectByte);
+                return (ArrayList<?>) JRedisSerializationUtils.kryoDeserialize(objectByte);
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -358,7 +358,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                return shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+                return shardedJedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(list));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
                 return "failed";
@@ -371,7 +371,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                return jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+                return jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(list));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
                 return "failed";
@@ -399,7 +399,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                return (FastTable<?>) JRedisSerializationUtils.fastDeserialize(shardedJedis.get(key.getBytes()));
+                return (FastTable<?>) JRedisSerializationUtils.kryoDeserialize(shardedJedis.get(key.getBytes()));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -412,7 +412,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                return (FastTable<?>) JRedisSerializationUtils.fastDeserialize(jedis.get(key.getBytes()));
+                return (FastTable<?>) JRedisSerializationUtils.kryoDeserialize(jedis.get(key.getBytes()));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -435,7 +435,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(list));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -447,7 +447,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(list));
+                jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(list));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -504,7 +504,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(fastMap));
+                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(fastMap));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -516,7 +516,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(fastMap));
+                jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(fastMap));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -539,7 +539,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                return (FastMap<?, ?>) JRedisSerializationUtils.fastDeserialize(shardedJedis.get(key.getBytes()));
+                return (FastMap<?, ?>) JRedisSerializationUtils.kryoDeserialize(shardedJedis.get(key.getBytes()));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -552,7 +552,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                return (FastMap<?, ?>) JRedisSerializationUtils.fastDeserialize(jedis.get(key.getBytes()));
+                return (FastMap<?, ?>) JRedisSerializationUtils.kryoDeserialize(jedis.get(key.getBytes()));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -612,7 +612,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                return (Serializable) JRedisSerializationUtils.fastDeserialize(shardedJedis.get(key.getBytes()));
+                return (Serializable) JRedisSerializationUtils.kryoDeserialize(shardedJedis.get(key.getBytes()));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -625,7 +625,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                return (Serializable) JRedisSerializationUtils.fastDeserialize(jedis.get(key.getBytes()));
+                return (Serializable) JRedisSerializationUtils.kryoDeserialize(jedis.get(key.getBytes()));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -652,7 +652,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+                shardedJedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(value));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -664,7 +664,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                jedis.set(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+                jedis.set(key.getBytes(), JRedisSerializationUtils.kryoSerialize(value));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -719,7 +719,7 @@ public class JRedisCache implements JCache {
                 FastTable<String> keys = new FastTable<String>();
                 Set<byte[]> list = shardedJedis.hkeys(String.valueOf("*").getBytes());
                 for (byte[] bs : list) {
-                    keys.addLast(bs == null ? null : (String) JRedisSerializationUtils.fastDeserialize(bs));
+                    keys.addLast(bs == null ? null : (String) JRedisSerializationUtils.kryoDeserialize(bs));
                 }
                 return keys;
             } catch (Exception ex) {
@@ -737,7 +737,7 @@ public class JRedisCache implements JCache {
                 FastTable<String> keys = new FastTable<String>();
                 Set<byte[]> list = jedis.keys(String.valueOf("*").getBytes());
                 for (byte[] bs : list) {
-                    keys.addLast(bs == null ? null : (String) JRedisSerializationUtils.fastDeserialize(bs));
+                    keys.addLast(bs == null ? null : (String) JRedisSerializationUtils.kryoDeserialize(bs));
                 }
                 return keys;
             } catch (Exception ex) {
@@ -806,7 +806,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                shardedJedis.lpush(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+                shardedJedis.lpush(key.getBytes(), JRedisSerializationUtils.kryoSerialize(value));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -818,7 +818,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                jedis.lpush(key.getBytes(), JRedisSerializationUtils.fastSerialize(value));
+                jedis.lpush(key.getBytes(), JRedisSerializationUtils.kryoSerialize(value));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
@@ -840,7 +840,7 @@ public class JRedisCache implements JCache {
             ShardedJedis shardedJedis = null;
             try {
                 shardedJedis = shardedJedisPool.getResource();
-                return (Serializable) JRedisSerializationUtils.fastDeserialize(shardedJedis.rpop(key.getBytes()));
+                return (Serializable) JRedisSerializationUtils.kryoDeserialize(shardedJedis.rpop(key.getBytes()));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
                 return null;             // if exception  return null ;
@@ -853,7 +853,7 @@ public class JRedisCache implements JCache {
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
-                return (Serializable) JRedisSerializationUtils.fastDeserialize(jedis.rpop(key.getBytes()));
+                return (Serializable) JRedisSerializationUtils.kryoDeserialize(jedis.rpop(key.getBytes()));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
                 return null;             // if exception  return null ;
@@ -878,9 +878,9 @@ public class JRedisCache implements JCache {
             try {
                 shardedJedis = shardedJedisPool.getResource();
                 byte[] keyBytes = key.getBytes();
-                obj = (Serializable) JRedisSerializationUtils.fastDeserialize(shardedJedis.rpop(keyBytes));
+                obj = (Serializable) JRedisSerializationUtils.kryoDeserialize(shardedJedis.rpop(keyBytes));
                 //return to queue
-                shardedJedis.lpush(keyBytes, JRedisSerializationUtils.fastSerialize(obj));
+                shardedJedis.lpush(keyBytes, JRedisSerializationUtils.kryoSerialize(obj));
             } catch (Exception ex) {
                 coverShardJedisException(ex, shardedJedisPool, shardedJedis);
             } finally {
@@ -895,9 +895,9 @@ public class JRedisCache implements JCache {
             try {
                 jedis = jedisPool.getResource();
                 byte[] keyBytes = key.getBytes();
-                obj = (Serializable) JRedisSerializationUtils.fastDeserialize(jedis.rpop(keyBytes));
+                obj = (Serializable) JRedisSerializationUtils.kryoDeserialize(jedis.rpop(keyBytes));
                 //return to queue
-                jedis.lpush(keyBytes, JRedisSerializationUtils.fastSerialize(obj));
+                jedis.lpush(keyBytes, JRedisSerializationUtils.kryoSerialize(obj));
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {

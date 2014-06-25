@@ -72,7 +72,7 @@ public interface JCache {
      * @param filed
      * @return
      */
-    public Object getList(String key,String filed);
+    public ArrayList<?> getList(String key,String filed);
 
     /**
      *
@@ -89,7 +89,7 @@ public interface JCache {
      * @return
      * @
      */
-    public Object getList(String key);
+    public ArrayList<?> getList(String key);
 
     /**
      * @param key
@@ -163,6 +163,8 @@ public interface JCache {
      * @throws JRedisCacheException
      */
     public FastTable<String> keys();
+
+
 
     public void destroy();
 

@@ -7,6 +7,7 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.stereotype.Service;
 import proto.TRoleEqu;
 import springJredisCache.JRedisCache;
+import springJredisCache.JRedisSerializationUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -67,16 +68,29 @@ public class Test {
         String key = "rolename";
         String  filed="role";
         ArrayList<TRoleEqu> equArrayList = new ArrayList<TRoleEqu>();
-        for (int i = 0; i != 1000; ++i) {
+        for (int i = 0; i != 50000; ++i) {
             equArrayList.add(new TRoleEqu());
         }
-        Thread.sleep(1000);
+
+                  //1024*40                                           500数据        40960
+                 //1000                  81038           1k数据          81038
+                 //1024*1024         1048576        1w条数据      810038
+        byte[] kryo_bytes=JRedisSerializationUtils.kryoSerialize(equArrayList);
+        long length=kryo_bytes.length;
+
+        ArrayList<TRoleEqu> kryo_list= (ArrayList<TRoleEqu>) JRedisSerializationUtils.kryoDeserialize(kryo_bytes);
+
+
 
         test.jRedisCache.putList(key,filed, equArrayList);
+
+
         ArrayList<TRoleEqu> equArrayList2 = (ArrayList<TRoleEqu>) test.jRedisCache.getList(key,filed);
 
 //
         System.out.println("get value from redis:" + equArrayList2);
+        equArrayList2.clear();
+        equArrayList.clear();
 //
 //        test.jRedisCache.removeList(key);
 

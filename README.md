@@ -12,8 +12,9 @@
 5.基于redis的订阅/发布方案；</br>
 
 #序列化测试性能对比 10w次序列化 反序列化：
-![test](http://git.oschina.net/uploads/images/2014/0214/102416_f5ac080e_1052.png)
+![QQ截图20140625141711](http://git.oschina.net/uploads/images/2014/0625/141810_8c03a33c_1052.png)
 #fst kryo都是不错的选择！
+#其中kyro默认采用了UsafeInput 和UsafeOutPut流 ，直接操作内存，提供更快的序列化方案
 #测试protobuffer相当的优秀  只是该序列化方案要在特定的环境中 有局限性
-#在生产环境中推荐使用FST ，kryo在生产中会出现一些怪异的问题 （反序列化数据过长会失败！）
+#kyro是纯java中应该最快的，但是在序列化无构造函数的时候会抛出空指针！推荐使用fst的序列化方案!
 # ps:该组件已经在某手机游戏服务器中得到了验证与应用 请放心使用！

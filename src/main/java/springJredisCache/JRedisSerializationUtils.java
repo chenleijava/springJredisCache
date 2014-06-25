@@ -9,8 +9,8 @@ package springJredisCache;
 
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.io.UnsafeInput;
+import com.esotericsoftware.kryo.io.UnsafeOutput;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistryLite;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -29,7 +29,6 @@ import java.io.*;
  *         Comment： 对象序列化工具类    序列化方案基于 FST - Fast Serialization
  *         https://github.com/flapdoodle-oss/de.flapdoodle.fast-serialization
  *         <p/>
- *         注意生产中推荐使用FST序列化方案
  */
 public class JRedisSerializationUtils {
 
@@ -38,6 +37,15 @@ public class JRedisSerializationUtils {
     }
 
     private static final Kryo kryo = new Kryo();
+
+    static {
+        kryo.setRegistrationRequired(false);
+        //http://hi.baidu.com/macrohuang/item/70d84a6f9f1b11147ddecc90
+ //       kryo.setInstantiatorStrategy(new SerializingInstantiatorStrategy());
+    }
+
+
+
 
     // Serialize
     //-----------------------------------------------------------------------
@@ -56,7 +64,7 @@ public class JRedisSerializationUtils {
         try {
             // stream closed in the finally
             byteArrayOutputStream = new ByteArrayOutputStream(512);
-            out = new FSTObjectOutput(byteArrayOutputStream);
+            out = new FSTObjectOutput(byteArrayOutputStream);  //32000  buffer size
             out.writeObject(obj);
             return byteArrayOutputStream.toByteArray();
         } catch (IOException ex) {
@@ -119,8 +127,9 @@ public class JRedisSerializationUtils {
         }
     }
 
-    //基于kryo序列换方案
 
+
+    //基于kryo序列换方案
     /**
      * 将对象序列化为字节数组
      *
@@ -130,31 +139,23 @@ public class JRedisSerializationUtils {
      */
     public static byte[] kryoSerialize(Object obj) throws JRedisCacheException {
         if (obj == null) throw new JRedisCacheException("obj can not be null");
-        ByteArrayOutputStream byteArrayOutputStream = null;
-        Output output = null;
+        UnsafeOutput output = null;
         try {
-            byteArrayOutputStream = new ByteArrayOutputStream();      //缓冲数据
-            output = new Output(byteArrayOutputStream);
+            output = new  UnsafeOutput(512,-1);    //buffersize =40960  防止数据过大 ，多次拷贝
             kryo.writeClassAndObject(output, obj);
             return output.toBytes();
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Serialize obj exception");
         } finally {
-            try {
-                obj = null;
-                if (byteArrayOutputStream != null) {
-                    byteArrayOutputStream.close();
-                    byteArrayOutputStream = null;
-                }
-                if (output != null) {
-                    output.close();   /** Writes the buffered bytes to the underlying OutputStream, if any .flush();. */
-                    output = null;
-                }
-            } catch (IOException ee) {
-                ee.printStackTrace();
+            obj = null;
+            if (output != null) {
+                output.close();   /** Writes the buffered bytes to the underlying OutputStream, if any .flush();. */
+                output = null;
             }
         }
     }
+
+
 
     /**
      * 将字节数组反序列化为对象
@@ -164,10 +165,10 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
-        Input input = null;
+        UnsafeInput input = null;
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
-            input = new Input(bytes);
+            input = new UnsafeInput(bytes);
             return kryo.readClassAndObject(input);
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Deserialize bytes exception");

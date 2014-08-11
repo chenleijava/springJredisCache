@@ -57,9 +57,7 @@ public class JRedisCache implements JCache {
      */
     protected void coverException(Exception ex, JedisPool jedisPool, Jedis jedis) {
         if (jedis == null) throw new NullPointerException();
-        if (ex instanceof JRedisCacheException || ex instanceof IOException) {
-            jedisPool.returnBrokenResource(jedis); //销毁该对象
-        }
+         jedisPool.returnBrokenResource(jedis); //销毁该对象
     }
 
     /**
@@ -93,7 +91,7 @@ public class JRedisCache implements JCache {
             coverException(ex, jedisPool, jedis);
             return null;
         } finally {
-            if (jedis != null) {
+           if (jedis!=null&&jedis.isConnected()) {
                 jedisPool.returnResource(jedis);
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("close redis connection-{" + jedis.toString() + "}");
@@ -120,7 +118,7 @@ public class JRedisCache implements JCache {
         } catch (Exception ex) {
             coverException(ex, jedisPool, jedis);
         } finally {
-            if (jedis != null) {
+           if (jedis!=null&&jedis.isConnected()) {
                 jedisPool.returnResource(jedis);
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("close redis connection-{" + jedis.toString() + "}");
@@ -173,7 +171,7 @@ public class JRedisCache implements JCache {
         } catch (Exception ex) {
             coverException(ex, jedisPool, jedis);
         } finally {
-            if (jedis != null) {
+           if (jedis!=null&&jedis.isConnected()) {
                 jedisPool.returnResource(jedis);
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("close redis connection-{" + jedis.toString() + "}");
@@ -209,7 +207,7 @@ public class JRedisCache implements JCache {
         } catch (Exception ex) {
             coverException(ex, jedisPool, jedis);
         } finally {
-            if (jedis != null) {
+           if (jedis!=null&&jedis.isConnected()) {
                 jedisPool.returnResource(jedis);
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("close redis connection-{" + jedis.toString() + "}");
@@ -233,7 +231,7 @@ public class JRedisCache implements JCache {
         } catch (Exception ex) {
             coverException(ex, jedisPool, jedis);
         } finally {
-            if (jedis != null) {
+           if (jedis!=null&&jedis.isConnected()) {
                 jedisPool.returnResource(jedis);
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("close redis connection-{" + jedis.toString() + "}");
@@ -268,7 +266,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
 
@@ -301,7 +299,7 @@ public class JRedisCache implements JCache {
                 coverException(ex, jedisPool, jedis);
                 return "failed";
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -338,7 +336,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
 
@@ -376,7 +374,7 @@ public class JRedisCache implements JCache {
                 coverException(ex, jedisPool, jedis);
                 return "failed";
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -416,7 +414,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -451,7 +449,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -486,7 +484,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -520,7 +518,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -556,7 +554,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -592,7 +590,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -629,7 +627,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -668,7 +666,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -702,7 +700,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -743,7 +741,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -786,7 +784,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -822,7 +820,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -858,7 +856,7 @@ public class JRedisCache implements JCache {
                 coverException(ex, jedisPool, jedis);
                 return null;             // if exception  return null ;
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }
@@ -901,7 +899,7 @@ public class JRedisCache implements JCache {
             } catch (Exception ex) {
                 coverException(ex, jedisPool, jedis);
             } finally {
-                if (jedis != null) {
+               if (jedis!=null&&jedis.isConnected()) {
                     jedisPool.returnResource(jedis);
                 }
             }

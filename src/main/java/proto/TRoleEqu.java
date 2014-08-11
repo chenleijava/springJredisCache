@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 public class TRoleEqu implements Serializable {
 
-
-
     private Integer equid = 0;
 
     private Integer equtypeid = 0;

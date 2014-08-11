@@ -1,6 +1,6 @@
 package testJRedis;
 
-import proto.RoleVo;
+import proto.TRoleEqu;
 import springJredisCache.JRedisSerializationUtils;
 
 import java.io.Serializable;
@@ -31,11 +31,10 @@ public class TestD_S implements Serializable {
 
     @org.junit.Test
     public void testSerialize() {
-        RoleVo.Builder builder = RoleVo.newBuilder();
-        builder.setRoleID(1);
-        builder.setRoleName("石头哥哥");
-        builder.setRoleSex(1);
-        RoleVo vo = builder.build();
+
+        TRoleEqu vo = new TRoleEqu();
+        vo.setOwnerid(1);
+        vo.setEquid(1);
 
         System.out.println("序列化 ， 反序列化 对比测试：");
 
@@ -54,20 +53,20 @@ public class TestD_S implements Serializable {
             System.out.println("fast序列化方案[序列化1000000次]："
                     + (System.currentTimeMillis() - time2));
 
-            long time3 = System.currentTimeMillis();
-            for (int i = 0; i < 1000000; i++) {
-                JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(vo));
-            }
-            System.out.println("jdk序列化方案[序列化1000000次]："
-                    + (System.currentTimeMillis() - time3));
+//            long time3 = System.currentTimeMillis();
+//            for (int i = 0; i < 1000000; i++) {
+//                JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(vo));
+//            }
+//            System.out.println("jdk序列化方案[序列化1000000次]："
+//                    + (System.currentTimeMillis() - time3));
 
 
-            long time4 = System.currentTimeMillis();
-            for (int i = 0; i < 1000000; i++) {
-                JRedisSerializationUtils.protoDeserialize(JRedisSerializationUtils.protoSerialize(vo), RoleVo.getDefaultInstance());
-            }
-            System.out.println("protoBuffer序列化方案[序列化1000000次]："
-                    + (System.currentTimeMillis() - time4));
+//            long time4 = System.currentTimeMillis();
+//            for (int i = 0; i < 1000000; i++) {
+//                JRedisSerializationUtils.protoDeserialize(JRedisSerializationUtils.protoSerialize(vo), RoleVo.getDefaultInstance());
+//            }
+//            System.out.println("protoBuffer序列化方案[序列化1000000次]："
+//                    + (System.currentTimeMillis() - time4));
 
             System.out.println("------------------------------------------------------------------------------");
         }

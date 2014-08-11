@@ -60,6 +60,7 @@ public class JRedisSerializationUtils {
      */
     public static byte[] fastSerialize(Object obj) {
         ByteArrayOutputStream byteArrayOutputStream = null;
+
         FSTObjectOutput out = null;
         try {
             // stream closed in the finally
@@ -77,6 +78,7 @@ public class JRedisSerializationUtils {
                     out = null;
                 }
                 if (byteArrayOutputStream != null) {
+
                     byteArrayOutputStream.close();
                     byteArrayOutputStream = null;
                 }

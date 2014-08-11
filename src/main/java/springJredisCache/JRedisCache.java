@@ -57,7 +57,9 @@ public class JRedisCache implements JCache {
      */
     protected void coverException(Exception ex, JedisPool jedisPool, Jedis jedis) {
         if (jedis == null) throw new NullPointerException();
-         jedisPool.returnBrokenResource(jedis); //销毁该对象
+        if (ex instanceof JRedisCacheException || ex instanceof IOException) {
+            jedisPool.returnBrokenResource(jedis); //销毁该对象
+        }
     }
 
     /**

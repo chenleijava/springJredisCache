@@ -17,8 +17,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import de.ruedigermoeller.serialization.FSTObjectInput;
 import de.ruedigermoeller.serialization.FSTObjectOutput;
+import javolution.util.FastTable;
 
 import java.io.*;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author 石头哥哥 </br>
@@ -36,15 +39,13 @@ public class JRedisSerializationUtils {
     public JRedisSerializationUtils() {
     }
 
-    private static final Kryo kryo = new Kryo();
-
-    static {
-        kryo.setRegistrationRequired(false);
-        //http://hi.baidu.com/macrohuang/item/70d84a6f9f1b11147ddecc90
- //       kryo.setInstantiatorStrategy(new SerializingInstantiatorStrategy());
-    }
-
-
+//    private static final Kryo kryo = new Kryo();
+//
+//    static {
+//        kryo.setRegistrationRequired(false);
+//        //http://hi.baidu.com/macrohuang/item/70d84a6f9f1b11147ddecc90
+// //       kryo.setInstantiatorStrategy(new SerializingInstantiatorStrategy());
+//    }
 
 
     // Serialize
@@ -130,8 +131,98 @@ public class JRedisSerializationUtils {
     }
 
 
+    interface KryoPool {
+
+
+        /**
+         * get o kryo object
+         *
+         * @return
+         */
+        Kryo get();
+
+
+        /**
+         * return object
+         *
+         * @param kryo
+         */
+        void offer(Kryo kryo);
+
+
+    }
 
     //基于kryo序列换方案
+    private static class KryoPoolImpl implements KryoPool {
+        /**
+         * default is 3000
+         * online server limit 3K
+         */
+        private static int DEFAULT_MAX_KRYO_SIZE = 3000;
+
+        /**
+         * thread safe list
+         */
+        private final FastTable<Kryo> kryoFastTable = new FastTable<Kryo>().atomic();
+
+        private KryoPoolImpl() {
+        }
+
+
+        /**
+         * @return
+         */
+        public static KryoPool getInstance() {
+            return Singleton.pool;
+        }
+
+        /**
+         * get o kryo object
+         *
+         * @return
+         */
+        @Override
+        public Kryo get() {
+            Kryo kryo = kryoFastTable.pollFirst();
+            return kryo == null ? creatInstnce() : kryo;
+        }
+
+        /**
+         * create a new kryo object to application use
+         *
+         * @return
+         */
+        private Kryo creatInstnce() {
+            Kryo kryo = new Kryo();
+            kryo.setReferences(false);//
+            return kryo;
+        }
+
+        /**
+         * return object
+         *  over limit ,will to GC handle
+         * @param kryo
+         */
+        @Override
+        public void offer(Kryo kryo) {
+            if (kryo != null) {
+                if (kryoFastTable.size() < DEFAULT_MAX_KRYO_SIZE) {
+                    kryoFastTable.addLast(kryo);
+                } else {
+                    kryo = null;//to GC
+                }
+            }
+        }
+
+        /**
+         *creat a Singleton
+         */
+        private static class Singleton {
+            private static final KryoPool pool = new KryoPoolImpl();
+        }
+    }
+
+
     /**
      * 将对象序列化为字节数组
      *
@@ -140,15 +231,18 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static byte[] kryoSerialize(Object obj) throws JRedisCacheException {
+        Kryo kryo = null;
         if (obj == null) throw new JRedisCacheException("obj can not be null");
         UnsafeOutput output = null;
         try {
-            output = new  UnsafeOutput(512,-1);    //buffersize =40960  防止数据过大 ，多次拷贝
+            kryo = KryoPoolImpl.getInstance().get();
+            output = new UnsafeOutput(512, -1);    //buffersize =40960  防止数据过大 ，多次拷贝
             kryo.writeClassAndObject(output, obj);
             return output.toBytes();
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Serialize obj exception");
         } finally {
+            KryoPoolImpl.getInstance().offer(kryo);
             obj = null;
             if (output != null) {
                 output.close();   /** Writes the buffered bytes to the underlying OutputStream, if any .flush();. */
@@ -156,7 +250,6 @@ public class JRedisSerializationUtils {
             }
         }
     }
-
 
 
     /**
@@ -168,13 +261,16 @@ public class JRedisSerializationUtils {
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
         UnsafeInput input = null;
+        Kryo kryo = null;
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
+            kryo = KryoPoolImpl.getInstance().get();
             input = new UnsafeInput(bytes);
             return kryo.readClassAndObject(input);
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Deserialize bytes exception");
         } finally {
+            KryoPoolImpl.getInstance().offer(kryo);
             bytes = null;
             if (input != null) {
                 input.close();

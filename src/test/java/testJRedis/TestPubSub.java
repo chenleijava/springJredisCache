@@ -52,6 +52,7 @@ public class TestPubSub {
     public void psubscribe() throws InterruptedException {
         //订阅 处理 指定的消息
         testPubSub.jRedisCache.psubscribe("xxx*", "fod_*");
+        //testPubSub.jRedisCache.subscribe("xxxxsss", "fod_2");
     }
 
     @After

@@ -78,17 +78,19 @@ public class Test {
         byte[] kryo_bytes=JRedisSerializationUtils.kryoSerialize(equArrayList);
         long length=kryo_bytes.length;
 
+        long start=System.currentTimeMillis();
         ArrayList<TRoleEqu> kryo_list= (ArrayList<TRoleEqu>) JRedisSerializationUtils.kryoDeserialize(kryo_bytes);
 
+        long end=System.currentTimeMillis()-start;
 
 
         test.jRedisCache.putList(key,filed, equArrayList);
 
 
+
         ArrayList<TRoleEqu> equArrayList2 = (ArrayList<TRoleEqu>) test.jRedisCache.getList(key,filed);
 
 //
-        System.out.println("get value from redis:" + equArrayList2);
         equArrayList2.clear();
         equArrayList.clear();
 //

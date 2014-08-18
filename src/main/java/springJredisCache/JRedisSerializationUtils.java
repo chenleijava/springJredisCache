@@ -20,8 +20,6 @@ import de.ruedigermoeller.serialization.FSTObjectOutput;
 import javolution.util.FastTable;
 
 import java.io.*;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author 石头哥哥 </br>
@@ -61,7 +59,6 @@ public class JRedisSerializationUtils {
      */
     public static byte[] fastSerialize(Object obj) {
         ByteArrayOutputStream byteArrayOutputStream = null;
-
         FSTObjectOutput out = null;
         try {
             // stream closed in the finally
@@ -163,10 +160,12 @@ public class JRedisSerializationUtils {
         /**
          * thread safe list
          */
-        private final FastTable<Kryo> kryoFastTable = new FastTable<Kryo>().atomic();
+      private final FastTable<Kryo> kryoFastTable = new FastTable<Kryo>();
+
 
         private KryoPoolImpl() {
         }
+
 
 
         /**
@@ -183,7 +182,7 @@ public class JRedisSerializationUtils {
          */
         @Override
         public Kryo get() {
-            Kryo kryo = kryoFastTable.pollFirst();
+            Kryo kryo = kryoFastTable.pollFirst();       // Retrieves and removes the head of the queue represented by this table
             return kryo == null ? creatInstnce() : kryo;
         }
 
@@ -200,14 +199,15 @@ public class JRedisSerializationUtils {
 
         /**
          * return object
-         *  over limit ,will to GC handle
+         * over limit ,will to GC handle
+         *
          * @param kryo
          */
         @Override
         public void offer(Kryo kryo) {
             if (kryo != null) {
                 if (kryoFastTable.size() < DEFAULT_MAX_KRYO_SIZE) {
-                    kryoFastTable.addLast(kryo);
+                    kryoFastTable.addLast(kryo);          //Inserts the specified element at the tail of this queue.
                 } else {
                     kryo = null;//to GC
                 }
@@ -215,7 +215,7 @@ public class JRedisSerializationUtils {
         }
 
         /**
-         *creat a Singleton
+         * creat a Singleton
          */
         private static class Singleton {
             private static final KryoPool pool = new KryoPoolImpl();

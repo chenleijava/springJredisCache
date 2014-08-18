@@ -68,20 +68,59 @@ public class Test {
         String key = "rolename";
         String  filed="role";
         ArrayList<TRoleEqu> equArrayList = new ArrayList<TRoleEqu>();
-        for (int i = 0; i != 50000; ++i) {
+        for (int i = 0; i != 500000; ++i) {
             equArrayList.add(new TRoleEqu());
         }
 
                   //1024*40                                           500数据        40960
                  //1000                  81038           1k数据          81038
                  //1024*1024         1048576        1w条数据      810038
-        byte[] kryo_bytes=JRedisSerializationUtils.kryoSerialize(equArrayList);
-        long length=kryo_bytes.length;
+        /**
+         *
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         serialize:833
+         Deserialize:1137
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         serialize:308
+         Deserialize:539
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         serialize:367
+         Deserialize:376
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
 
-        long start=System.currentTimeMillis();
-        ArrayList<TRoleEqu> kryo_list= (ArrayList<TRoleEqu>) JRedisSerializationUtils.kryoDeserialize(kryo_bytes);
 
-        long end=System.currentTimeMillis()-start;
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         serialize:1317
+         Deserialize:347
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         serialize:406
+         Deserialize:2074
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+         serialize:377
+         Deserialize:359
+         >>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+         */
+
+
+        for (int i=0;i!=3;++i) {
+            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>");
+            long start1 = System.currentTimeMillis();
+            byte[] kryo_bytes = JRedisSerializationUtils.kryoSerialize(equArrayList);
+
+            System.out.println("serialize:"+(System.currentTimeMillis() - start1));
+
+            long start2 = System.currentTimeMillis();
+            ArrayList<TRoleEqu> kryo_list = (ArrayList<TRoleEqu>) JRedisSerializationUtils.kryoDeserialize(kryo_bytes);
+
+            System.out.println("Deserialize:"+(System.currentTimeMillis() - start2));
+            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>");
+        }
 
 
         test.jRedisCache.putList(key,filed, equArrayList);

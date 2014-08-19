@@ -48,6 +48,7 @@ public class JRedisSerializationUtils {
 
     // Serialize
     //-----------------------------------------------------------------------
+
     /**
      * <p>Serializes an <code>Object</code> to a byte array for
      * storage/serialization.</p>
@@ -86,6 +87,7 @@ public class JRedisSerializationUtils {
     }
     // Deserialize
     //-----------------------------------------------------------------------
+
     /**
      * <p>Deserializes a single <code>Object</code> from an array of bytes.</p>
      *
@@ -129,8 +131,8 @@ public class JRedisSerializationUtils {
     private static class KryoHolder {
 
         static final int BUFFER_SIZE = 1024;
-        private  Kryo kryo;
-        private  Output output = new Output(BUFFER_SIZE, -1);     //reuse
+        private Kryo kryo;
+        private Output output = new Output(BUFFER_SIZE, -1);     //reuse
 
         KryoHolder(Kryo kryo) {
             this.kryo = kryo;
@@ -138,7 +140,6 @@ public class JRedisSerializationUtils {
 
 
         /**
-         *
          * @param kryo
          * @param clazz
          */
@@ -167,12 +168,18 @@ public class JRedisSerializationUtils {
 
 
     //基于kryo序列换方案
-    private static class KryoPoolImpl implements KryoPool {
+
+    /**
+     * 由于kryo创建的代价相对较高 ，这里使用空间换时间
+     * 对KryoHolder对象进行重用
+     * KryoHolder会出现峰值，应该不会造成内存泄漏哦
+     */
+    public static class KryoPoolImpl implements KryoPool {
         /**
          * default is 1500
          * online server limit 3K
          */
-        private static int DEFAULT_MAX_KRYO_SIZE = 1500;
+       // private static int DEFAULT_MAX_KRYO_SIZE = 1500;
 
         /**
          * thread safe list
@@ -180,7 +187,11 @@ public class JRedisSerializationUtils {
         private final FastTable<KryoHolder> kryoFastTable = new FastTable<KryoHolder>();
 
 
+        /**
+         *
+         */
         private KryoPoolImpl() {
+
         }
 
         /**
@@ -206,7 +217,7 @@ public class JRedisSerializationUtils {
          *
          * @return
          */
-        private KryoHolder creatInstnce() {
+        public KryoHolder creatInstnce() {
             Kryo kryo = new Kryo();
             kryo.setReferences(false);//
             return new KryoHolder(kryo);
@@ -215,20 +226,22 @@ public class JRedisSerializationUtils {
         /**
          * return object
          * Inserts the specified element at the tail of this queue.
+         *
          * @param kryoHolder
          */
         @Override
         public void offer(KryoHolder kryoHolder) {
-            if (kryoHolder != null) {
-                if (kryoFastTable.size() < DEFAULT_MAX_KRYO_SIZE) {
-                    kryoFastTable.addLast(kryoHolder);
-                } else {
-                    kryoHolder.output.clear();
-                    kryoHolder.output=null;
-                    kryoHolder.kryo=null;
-                    kryoHolder = null;         //  for  gc
-                }
-            }
+//            if (kryoHolder != null) {
+//                if (kryoFastTable.size() < DEFAULT_MAX_KRYO_SIZE) {
+//                    kryoFastTable.offer(kryoHolder);
+//                } else {
+//                    kryoHolder.output.clear();
+//                    kryoHolder.output = null;
+//                    kryoHolder.kryo = null;
+//                    kryoHolder = null;         //  for  gc
+//                }
+//            }
+            kryoFastTable.addLast(kryoHolder);
         }
 
         /**
@@ -238,6 +251,8 @@ public class JRedisSerializationUtils {
             private static final KryoPool pool = new KryoPoolImpl();
         }
     }
+
+
 
 
     /**
@@ -292,8 +307,8 @@ public class JRedisSerializationUtils {
     }
 
 
-
     //jdk原生序列换方案
+
     /**
      * @param obj
      * @return
@@ -342,9 +357,8 @@ public class JRedisSerializationUtils {
     }
 
 
-
-
     // 基于protobuffer的序列化方案
+
     /**
      * @param bytes       字节数据
      * @param messageLite 序列化对应的类型

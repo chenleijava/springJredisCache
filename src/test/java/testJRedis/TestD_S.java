@@ -34,26 +34,29 @@ public class TestD_S implements Serializable {
         vo.setOwnerid(1);
         vo.setEquid(1);
 
+        //init pool
+       // JRedisSerializationUtils.KryoPoolImpl.getInstance();
+
 //        RoleVo.Builder builder = RoleVo.newBuilder();
 //        builder.setRoleName("123");
 //        builder.setRoleID(1);
 //        RoleVo vo = builder.build();
 
-        System.out.println("序列化 ， 反序列化 10W 次对比测试：");
+        System.out.println("序列化 ， 反序列化 100W 次对比测试：");
 
         for (int j = 0; j != 50; ++j) {
             long time1 = System.currentTimeMillis();
-            for (int i = 0; i < 100000; i++) {
+            for (int i = 0; i < 1000000; i++) {
                 JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(vo));
             }
-            System.out.println("kryo序列化方案[序列化10W次]："
+            System.out.println("kryo序列化方案[序列化100W次]："
                     + (System.currentTimeMillis() - time1));
 
             long time2 = System.currentTimeMillis();
-            for (int i = 0; i < 100000; i++) {
+            for (int i = 0; i < 1000000; i++) {
                 JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo));
             }
-            System.out.println("fast序列化方案[序列化10W次]："
+            System.out.println("fast序列化方案[序列化100W次]："
                     + (System.currentTimeMillis() - time2));
 
 //            long time3 = System.currentTimeMillis();

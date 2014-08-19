@@ -144,17 +144,18 @@
 
 
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>4.0.23.Final</version>
+        </dependency>
+
+        <dependency>
             <groupId>de.ruedigermoeller</groupId>
             <artifactId>fst</artifactId>
             <version>1.58</version>
         </dependency>
 
 
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-buffer</artifactId>
-            <version>4.0.23.Final</version>
-        </dependency>
 
         <dependency>
             <groupId>com.esotericsoftware.kryo</groupId>
@@ -162,6 +163,11 @@
             <version>2.24.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.directmemory</groupId>
+            <artifactId>directmemory-kryo</artifactId>
+            <version>0.2</version>
+        </dependency>
 
 
         <dependency>

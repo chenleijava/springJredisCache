@@ -28,7 +28,7 @@ public class TestD_S implements Serializable {
         list.add(3);
     }
     @org.junit.Test
-    public void testSerialize2() {
+    public void testSerialize2() throws Exception {
 
         TRoleEqu vo = new TRoleEqu();
         vo.setOwnerid(1);
@@ -79,7 +79,7 @@ public class TestD_S implements Serializable {
     }
 
     @org.junit.Test
-    public void testSerialize() {
+    public void testSerialize() throws Exception {
 
         TRoleEqu vo = new TRoleEqu();
         vo.setOwnerid(1);
@@ -94,17 +94,17 @@ public class TestD_S implements Serializable {
 
         for (int j = 0; j != 50; ++j) {
             long time1 = System.currentTimeMillis();
-            for (int i = 0; i < 100000; i++) {
+            for (int i = 0; i < 10000; i++) {
                 JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(vo));
             }
-            System.out.println("kryo序列化方案[序列化100000次]："
+            System.out.println("kryo序列化方案[序列化10000次]："
                     + (System.currentTimeMillis() - time1));
 
             long time2 = System.currentTimeMillis();
-            for (int i = 0; i < 100000; i++) {
+            for (int i = 0; i < 10000; i++) {
                 JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo));
             }
-            System.out.println("fast序列化方案[序列化100000次]："
+            System.out.println("fast序列化方案[序列化10000次]："
                     + (System.currentTimeMillis() - time2));
 
 //            long time3 = System.currentTimeMillis();

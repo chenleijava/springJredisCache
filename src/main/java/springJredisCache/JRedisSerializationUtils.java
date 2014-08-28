@@ -15,9 +15,9 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistryLite;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
-import de.ruedigermoeller.serialization.FSTObjectInput;
-import de.ruedigermoeller.serialization.FSTObjectOutput;
 import javolution.util.FastTable;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
 
 import java.io.*;
 
@@ -37,18 +37,15 @@ public class JRedisSerializationUtils {
     public JRedisSerializationUtils() {
     }
 
-//    private static final Kryo kryo = new Kryo();
-//
-//    static {
-//        kryo.setRegistrationRequired(false);
-//        //http://hi.baidu.com/macrohuang/item/70d84a6f9f1b11147ddecc90
-// //       kryo.setInstantiatorStrategy(new SerializingInstantiatorStrategy());
-//    }
-
 
     // Serialize
     //-----------------------------------------------------------------------
 
+    //    In order to optimize object reuse and thread safety,
+    // FSTConfiguration provides 2 simple factory methods to
+    // obtain input/outputstream instances (they are stored thread local):
+    //! reuse this Object, it caches metadata. Performance degrades massively
+    //using createDefaultConfiguration()        FSTConfiguration is singleton
     /**
      * <p>Serializes an <code>Object</code> to a byte array for
      * storage/serialization.</p>
@@ -65,6 +62,7 @@ public class JRedisSerializationUtils {
             byteArrayOutputStream = new ByteArrayOutputStream(512);
             out = new FSTObjectOutput(byteArrayOutputStream);  //32000  buffer size
             out.writeObject(obj);
+            out.flush();
             return byteArrayOutputStream.toByteArray();
         } catch (IOException ex) {
             throw new JRedisCacheException(ex);
@@ -96,9 +94,9 @@ public class JRedisSerializationUtils {
      * @throws IllegalArgumentException if <code>objectData</code> is <code>null</code>
      * @throws JRedisCacheException     (runtime) if the serialization fails
      */
-    public static Object fastDeserialize(byte[] objectData) {
+    public static Object fastDeserialize(byte[] objectData) throws Exception {
         ByteArrayInputStream byteArrayInputStream = null;
-        FSTObjectInput in = null;
+        FSTObjectInput in=null ;
         try {
             // stream closed in the finally
             byteArrayInputStream = new ByteArrayInputStream(objectData);
@@ -179,7 +177,7 @@ public class JRedisSerializationUtils {
          * default is 1500
          * online server limit 3K
          */
-       // private static int DEFAULT_MAX_KRYO_SIZE = 1500;
+        // private static int DEFAULT_MAX_KRYO_SIZE = 1500;
 
         /**
          * thread safe list
@@ -251,8 +249,6 @@ public class JRedisSerializationUtils {
             private static final KryoPool pool = new KryoPoolImpl();
         }
     }
-
-
 
 
     /**

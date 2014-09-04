@@ -16,6 +16,7 @@ import com.google.protobuf.ExtensionRegistryLite;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import javolution.util.FastTable;
+import org.msgpack.MessagePack;
 import org.nustaq.serialization.FSTObjectInput;
 import org.nustaq.serialization.FSTObjectOutput;
 
@@ -46,6 +47,7 @@ public class JRedisSerializationUtils {
     // obtain input/outputstream instances (they are stored thread local):
     //! reuse this Object, it caches metadata. Performance degrades massively
     //using createDefaultConfiguration()        FSTConfiguration is singleton
+
     /**
      * <p>Serializes an <code>Object</code> to a byte array for
      * storage/serialization.</p>
@@ -96,7 +98,7 @@ public class JRedisSerializationUtils {
      */
     public static Object fastDeserialize(byte[] objectData) throws Exception {
         ByteArrayInputStream byteArrayInputStream = null;
-        FSTObjectInput in=null ;
+        FSTObjectInput in = null;
         try {
             // stream closed in the finally
             byteArrayInputStream = new ByteArrayInputStream(objectData);
@@ -127,15 +129,13 @@ public class JRedisSerializationUtils {
      * Kryo 的包装
      */
     private static class KryoHolder {
-
-        static final int BUFFER_SIZE = 1024;
         private Kryo kryo;
+        static final int BUFFER_SIZE = 1024;
         private Output output = new Output(BUFFER_SIZE, -1);     //reuse
-
+        private Input input=new Input();
         KryoHolder(Kryo kryo) {
             this.kryo = kryo;
         }
-
 
         /**
          * @param kryo
@@ -229,16 +229,6 @@ public class JRedisSerializationUtils {
          */
         @Override
         public void offer(KryoHolder kryoHolder) {
-//            if (kryoHolder != null) {
-//                if (kryoFastTable.size() < DEFAULT_MAX_KRYO_SIZE) {
-//                    kryoFastTable.offer(kryoHolder);
-//                } else {
-//                    kryoHolder.output.clear();
-//                    kryoHolder.output = null;
-//                    kryoHolder.kryo = null;
-//                    kryoHolder = null;         //  for  gc
-//                }
-//            }
             kryoFastTable.addLast(kryoHolder);
         }
 
@@ -283,22 +273,152 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
-        Input input = null;
         KryoHolder kryoHolder = null;
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
             kryoHolder = KryoPoolImpl.getInstance().get();
-            input = new Input(bytes);
-            return kryoHolder.kryo.readClassAndObject(input);
+            kryoHolder.input.setBuffer(bytes,0,bytes.length);//call it ,and then use input object
+            return kryoHolder.kryo.readClassAndObject(kryoHolder.input);
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Deserialize bytes exception");
         } finally {
             KryoPoolImpl.getInstance().offer(kryoHolder);
             bytes = null;
-            if (input != null) {
-                input.close();
-                input = null;
-            }
+        }
+    }
+
+    private static final class MessagePackHolder {
+        private MessagePack messagePack;
+        static final int BUFFER_SIZE = 1024;
+        private Output output = new Output(BUFFER_SIZE, -1);     //reuse
+        private Input in = new Input();
+
+
+        public MessagePackHolder(MessagePack messagePack) {
+            this.messagePack = messagePack;
+        }
+    }
+
+    //基于messagePack的序列化方案
+    interface MessagePackPool {
+
+        /**
+         * @return
+         */
+        MessagePackHolder get();
+
+        /**
+         * @param messagePack
+         */
+        void offer(MessagePackHolder messagePack);
+
+
+    }
+
+
+    private static final class MessagePackPoolImpl implements MessagePackPool {
+
+        /**
+         * thread safe list
+         */
+        private final FastTable<MessagePackHolder> messagePackFastTable = new FastTable<MessagePackHolder>();
+
+        /**
+         * @return
+         */
+        public static MessagePackPool getInstance() {
+            return Singleton.pool;
+        }
+
+        private MessagePackPoolImpl() {
+        }
+
+        /**
+         * @return
+         */
+        @Override
+        public MessagePackHolder get() {
+            MessagePackHolder messagePackHolder = messagePackFastTable.pollFirst();
+            return messagePackHolder == null ? creatInstnce() : messagePackHolder;
+        }
+
+        /**
+         * create a new kryo object to application use
+         *
+         * @return
+         */
+        private MessagePackHolder creatInstnce() {
+            return new MessagePackHolder(new MessagePack());
+        }
+
+        /**
+         * @param messagePackHolder
+         */
+        @Override
+        public void offer(MessagePackHolder messagePackHolder) {
+            if (messagePackHolder != null) messagePackFastTable.addLast(messagePackHolder);
+        }
+
+        /**
+         * creat a Singleton
+         */
+        private static class Singleton {
+            private static final MessagePackPool pool = new MessagePackPoolImpl();
+        }
+    }
+
+
+    /**
+     * 将对象序列化为字节数组
+     *
+     * @param obj
+     * @return 字节数组
+     * @throws JRedisCacheException
+     */
+    public static byte[] messagePackSerialize(Object obj) throws JRedisCacheException {
+        MessagePackHolder messagePackHolder = null;
+        if (obj == null) throw new JRedisCacheException("obj can not be null");
+        try {
+            messagePackHolder = MessagePackPoolImpl.getInstance().get();
+            messagePackHolder.output.clear();
+            messagePackHolder.messagePack.write(messagePackHolder.output, obj);
+            return messagePackHolder.output.toBytes();
+        } catch (JRedisCacheException e) {
+            MessagePackPoolImpl.getInstance().offer(messagePackHolder);
+            throw new JRedisCacheException("Serialize obj exception");
+        } catch (IOException e) {
+            MessagePackPoolImpl.getInstance().offer(messagePackHolder);
+            return null;
+        } finally {
+            MessagePackPoolImpl.getInstance().offer(messagePackHolder);
+            obj = null; //GC
+        }
+    }
+
+
+    /**
+     * 将字节数组反序列化为对象
+     *
+     * @param bytes 字节数组
+     * @return object
+     * @throws JRedisCacheException
+     */
+    public static Object messagePackDeserialize(byte[] bytes) throws JRedisCacheException {
+        MessagePackHolder messagePackHolder = null;
+        if (bytes == null) throw new JRedisCacheException("bytes can not be null");
+        try {
+            messagePackHolder = MessagePackPoolImpl.getInstance().get();
+            messagePackHolder.in.setPosition(0);
+            messagePackHolder.in.setBuffer(bytes);
+            return messagePackHolder.messagePack.read(messagePackHolder.in);
+        } catch (JRedisCacheException e) {
+            throw new JRedisCacheException("Deserialize bytes exception");
+        } catch (IOException e) {
+            MessagePackPoolImpl.getInstance().offer(messagePackHolder);
+            return null;
+        } finally {
+            MessagePackPoolImpl.getInstance().offer(messagePackHolder);
+            bytes = null;
         }
     }
 

@@ -44,7 +44,20 @@ public class TestD_S implements Serializable {
 
         System.out.println("序列化 ， 反序列化 100W 次对比测试：");
 
+
+
+
         for (int j = 0; j != 50; ++j) {
+
+
+            long time4 = System.currentTimeMillis();
+            for (int i = 0; i < 1000000; i++) {
+                JRedisSerializationUtils.kryoDeserialize_un(JRedisSerializationUtils.kryoSerialize(vo));
+            }
+            System.out.println("kry_un==序列化方案[序列化100W次]："
+                    + (System.currentTimeMillis() - time4));
+
+
             long time1 = System.currentTimeMillis();
             for (int i = 0; i < 1000000; i++) {
                 JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(vo));
@@ -61,18 +74,12 @@ public class TestD_S implements Serializable {
 
 //            long time3 = System.currentTimeMillis();
 //            for (int i = 0; i < 1000000; i++) {
-//                JRedisSerializationUtils.jdeserialize(JRedisSerializationUtils.jserialize(vo));
+//                JRedisSerializationUtils.messagePackDeserialize(JRedisSerializationUtils.messagePackSerialize(vo));
 //            }
-//            System.out.println("jdk序列化方案[序列化1000000次]："
+//            System.out.println("messagePack序列化方案[序列化100W次]："
 //                    + (System.currentTimeMillis() - time3));
 
 
-//            long time4 = System.currentTimeMillis();
-//            for (int i = 0; i < 100000; i++) {
-//                JRedisSerializationUtils.protoDeserialize(JRedisSerializationUtils.protoSerialize(vo), RoleVo.getDefaultInstance());
-//            }
-//            System.out.println("protoBuffer序列化方案[序列化100000次]："
-//                    + (System.currentTimeMillis() - time4));
 
             System.out.println("------------------------------------------------------------------------------");
         }

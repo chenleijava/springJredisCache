@@ -1,7 +1,10 @@
 package proto;
 
+import org.msgpack.annotation.Message;
+
 import java.io.Serializable;
 
+@Message
 public class TRoleEqu implements Serializable {
 
     private Integer equid = 0;

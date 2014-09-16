@@ -10,6 +10,7 @@
 3.基于 FST序列化方案 ;   </br>
 4.基于 protobuffer序列化方案 ;   </br>
 5.基于redis的订阅/发布方案；</br>
+6.基于messagePack序列化方案；
 
 #序列化测试性能对比 10w次序列化 反序列化：
 ![QQ截图20140625141711](http://git.oschina.net/uploads/images/2014/0625/141810_8c03a33c_1052.png)

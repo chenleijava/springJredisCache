@@ -49,13 +49,13 @@ public class TestD_S implements Serializable {
 
         for (int j = 0; j != 50; ++j) {
 
-
-            long time4 = System.currentTimeMillis();
-            for (int i = 0; i < 1000000; i++) {
-                JRedisSerializationUtils.kryoDeserialize_un(JRedisSerializationUtils.kryoSerialize(vo));
-            }
-            System.out.println("kry_un==序列化方案[序列化100W次]："
-                    + (System.currentTimeMillis() - time4));
+//
+//            long time4 = System.currentTimeMillis();
+//            for (int i = 0; i < 1000000; i++) {
+//                JRedisSerializationUtils.kryoDeserialize_un(JRedisSerializationUtils.kryoSerialize(vo));
+//            }
+//            System.out.println("kry_un==序列化方案[序列化100W次]："
+//                    + (System.currentTimeMillis() - time4));
 
 
             long time1 = System.currentTimeMillis();

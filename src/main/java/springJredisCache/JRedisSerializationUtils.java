@@ -256,7 +256,7 @@ public class JRedisSerializationUtils {
             kryoHolder = KryoPoolImpl.getInstance().get();
             kryoHolder.output.clear();  //clear Output    -->每次调用的时候  重置
             kryoHolder.kryo.writeClassAndObject(kryoHolder.output, obj);
-            return kryoHolder.output.toBytes();
+            return kryoHolder.output.toBytes();// 无法避免拷贝  ~~~
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Serialize obj exception");
         } finally {
@@ -278,13 +278,36 @@ public class JRedisSerializationUtils {
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
             kryoHolder = KryoPoolImpl.getInstance().get();
-            kryoHolder.input.setBuffer(bytes, 0, bytes.length);//call it ,and then use input object
+            kryoHolder.input.setBuffer(bytes, 0, bytes.length);//call it ,and then use input object  ,discard any array
             return kryoHolder.kryo.readClassAndObject(kryoHolder.input);
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Deserialize bytes exception");
         } finally {
             KryoPoolImpl.getInstance().offer(kryoHolder);
-            bytes = null;
+            bytes = null;       //  for gc
+        }
+    }
+
+
+    /**
+     * 将字节数组反序列化为对象
+     *
+     * @param bytes 字节数组
+     * @return object
+     * @throws JRedisCacheException
+     */
+    public static Object kryoDeserialize(byte[] bytes,int length) throws JRedisCacheException {
+        KryoHolder kryoHolder = null;
+        if (bytes == null) throw new JRedisCacheException("bytes can not be null");
+        try {
+            kryoHolder = KryoPoolImpl.getInstance().get();
+            kryoHolder.input.setBuffer(bytes, 0, length);//call it ,and then use input object  ,discard any array
+            return kryoHolder.kryo.readClassAndObject(kryoHolder.input);
+        } catch (JRedisCacheException e) {
+            throw new JRedisCacheException("Deserialize bytes exception");
+        } finally {
+            KryoPoolImpl.getInstance().offer(kryoHolder);
+            bytes = null;       //  for gc
         }
     }
 
@@ -319,9 +342,9 @@ public class JRedisSerializationUtils {
     private static final class MessagePackPoolImpl implements MessagePackPool {
 
         /**
-         * thread safe list
+         * atomic , thread safe list
          */
-        private final FastTable<MessagePackHolder> messagePackFastTable = new FastTable<MessagePackHolder>();
+        private final FastTable<MessagePackHolder> messagePackFastTable = new FastTable<MessagePackHolder>().atomic();
 
         /**
          * @return
@@ -423,11 +446,11 @@ public class JRedisSerializationUtils {
 
 
     //jdk原生序列换方案
-
     /**
      * @param obj
      * @return
      */
+    @Deprecated
     public static byte[] jserialize(Object obj) {
         ObjectOutputStream oos = null;
         ByteArrayOutputStream baos = null;
@@ -452,6 +475,7 @@ public class JRedisSerializationUtils {
      * @param bits
      * @return
      */
+    @Deprecated
     public static Object jdeserialize(byte[] bits) {
         ObjectInputStream ois = null;
         ByteArrayInputStream bais = null;

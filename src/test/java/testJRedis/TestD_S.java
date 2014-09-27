@@ -1,5 +1,8 @@
 package testJRedis;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import proto.TRoleEqu;
 import springJredisCache.JRedisSerializationUtils;
 
@@ -39,29 +42,25 @@ public class TestD_S implements Serializable {
         Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
-                System.out.println("序列化 ， 反序列化 10W 次对比测试：");
+                System.out.println("序列化 ， 反序列化 100W 次对比测试：");
                 for (int j = 0; j != 50; ++j) {
-                    long time2 = System.currentTimeMillis();
-                    for (int i = 0; i < 100000; i++) {
-                        try {
-                            JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    System.out.println("1>>>fast序列化方案[序列化10W次]："
-                            + (System.currentTimeMillis() - time2));
-
-
+//                    long time2 = System.currentTimeMillis();
+//                    for (int i = 0; i < 100000; i++) {
+//                        try {
+//                            JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo));
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                    System.out.println("1>>>fast序列化方案[序列化10W次]："
+//                            + (System.currentTimeMillis() - time2));
 
                     long time1 = System.currentTimeMillis();
-                    for (int i = 0; i < 100000; i++) {
+                    for (int i = 0; i < 1000000; i++) {
                         JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(vo));
                     }
-                    System.out.println("1>>>kryo序列化方案[序列化10W次]："
+                    System.out.println("池化kryo处理方案1>>>kryo序列化方案[序列化100W次]："
                             + (System.currentTimeMillis() - time1));
-
-
 
                     System.out.println("------------------------------------------------------------------------------");
                 }
@@ -77,34 +76,82 @@ public class TestD_S implements Serializable {
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                System.out.println("序列化 ， 反序列化 10W 次对比测试：");
+                System.out.println("序列化 ， 反序列化 100W 次对比测试：");
                 for (int j = 0; j != 50; ++j) {
 
                     long time1 = System.currentTimeMillis();
-                    for (int i = 0; i < 100000; i++) {
+                    for (int i = 0; i < 1000000; i++) {
                         JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(vo2));
                     }
-                    System.out.println("2>>>kryo序列化方案[序列化10W次]："
+                    System.out.println("池化kryo处理方案测试2>>>kryo序列化方案[序列化100W次]："
                             + (System.currentTimeMillis() - time1));
 
-                    long time2 = System.currentTimeMillis();
-                    for (int i = 0; i < 100000; i++) {
-                        try {
-                            JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo2));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    System.out.println("2>>>fast序列化方案[序列化10W次]："
-                            + (System.currentTimeMillis() - time2));
+//                    long time2 = System.currentTimeMillis();
+//                    for (int i = 0; i < 100000; i++) {
+//                        try {
+//                            JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo2));
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                    System.out.println("2>>>fast序列化方案[序列化10W次]："
+//                            + (System.currentTimeMillis() - time2));
 
                     System.out.println("------------------------------------------------------------------------------");
                 }
             }
         });
 
+
+
+        final TRoleEqu vo3 = new TRoleEqu();
+        vo3.setOwnerid(1);
+        vo3.setEquid(1);
+        System.out.println("序列化 ， 反序列化 100W 次对比测试：");
+
+        Thread t3=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int j = 0; j != 50; ++j) {
+                    long time1 = System.currentTimeMillis();
+                    for (int i = 0; i < 1000000; i++) {
+                        Kryo kryo=new Kryo();
+                        Output output = new Output(1024, -1) ;
+                        kryo.writeClassAndObject(output,vo3);
+                        Input input=new Input();
+                        input.setBuffer(output.toBytes());
+                        kryo.readClassAndObject(input);
+                        //JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(vo2));
+                    }
+                    System.out.println("每次new一个Kyro实例>>>kryo序列化方案[序列化100W次]："
+                            + (System.currentTimeMillis() - time1));
+
+//            long time2 = System.currentTimeMillis();
+//            for (int i = 0; i < 100000; i++) {
+//                try {
+//                    JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(vo2));
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//            System.out.println("2--only >>fast序列化方案[序列化10W次]："
+//                    + (System.currentTimeMillis() - time2));
+
+                    System.out.println("------------------------------------------------------------------------------");
+                }
+            }
+        });
+
+
+
+
         t1.start();
         t2.start();
+        t3.start();
+
+
+
+
 
     }
 

@@ -132,7 +132,8 @@ public class JRedisSerializationUtils {
         private Kryo kryo;
         static final int BUFFER_SIZE = 1024;
         private Output output = new Output(BUFFER_SIZE, -1);     //reuse
-        private Input input=new Input();
+        private Input input = new Input();
+
         KryoHolder(Kryo kryo) {
             this.kryo = kryo;
         }
@@ -182,7 +183,7 @@ public class JRedisSerializationUtils {
         /**
          * thread safe list
          */
-        private final FastTable<KryoHolder> kryoFastTable = new FastTable<KryoHolder>();
+        private final FastTable<KryoHolder> kryoFastTable = new FastTable<KryoHolder>().atomic();
 
 
         /**
@@ -277,7 +278,7 @@ public class JRedisSerializationUtils {
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
             kryoHolder = KryoPoolImpl.getInstance().get();
-            kryoHolder.input.setBuffer(bytes,0,bytes.length);//call it ,and then use input object
+            kryoHolder.input.setBuffer(bytes, 0, bytes.length);//call it ,and then use input object
             return kryoHolder.kryo.readClassAndObject(kryoHolder.input);
         } catch (JRedisCacheException e) {
             throw new JRedisCacheException("Deserialize bytes exception");
@@ -292,7 +293,6 @@ public class JRedisSerializationUtils {
         static final int BUFFER_SIZE = 1024;
         private Output output = new Output(BUFFER_SIZE, -1);     //reuse
         private Input in = new Input();
-
 
         public MessagePackHolder(MessagePack messagePack) {
             this.messagePack = messagePack;
@@ -408,7 +408,6 @@ public class JRedisSerializationUtils {
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
             messagePackHolder = MessagePackPoolImpl.getInstance().get();
-            messagePackHolder.in.setPosition(0);
             messagePackHolder.in.setBuffer(bytes);
             return messagePackHolder.messagePack.read(messagePackHolder.in);
         } catch (JRedisCacheException e) {

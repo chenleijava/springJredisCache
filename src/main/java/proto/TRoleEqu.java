@@ -1,5 +1,6 @@
 package proto;
 
+
 import org.msgpack.annotation.Message;
 
 import java.io.Serializable;

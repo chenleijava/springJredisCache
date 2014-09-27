@@ -46,7 +46,7 @@
     <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.0.23.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-common:4.0.23.Final" level="project" />
-    <orderEntry type="library" name="Maven: de.ruedigermoeller:fst:2.01" level="project" />
+    <orderEntry type="library" name="Maven: de.ruedigermoeller:fst:2.05" level="project" />
     <orderEntry type="library" name="Maven: org.javassist:javassist:3.18.1-GA" level="project" />
     <orderEntry type="library" name="Maven: org.msgpack:msgpack:0.6.11" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1.1" level="project" />

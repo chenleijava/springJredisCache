@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2014.  @石头哥哥
+ * THIS SOFTWARE IS PROVIDED BY THE FREEBSD PROJECT ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package testJRedis;
 
 import org.apache.log4j.xml.DOMConfigurator;
@@ -36,6 +41,29 @@ public class Test {
         DOMConfigurator.configure("res/appConfig/log4j.xml");
         System.setProperty("java.net.preferIPv4Stack", "true"); //Disable IPv6 in JVM
         springContext = new FileSystemXmlApplicationContext("res/springConfig/spring-context.xml");
+
+
+        List<String> list = Arrays.asList("");
+
+        List<String> stringList = new ArrayList<String>();
+
+
+//        JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(list));
+//
+//        JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(list));
+
+
+        System.out.println
+                ((list instanceof ArrayList) ? "list is ArrayList"
+                        : "list not ArrayList?");
+
+        System.out.println
+                ((stringList instanceof ArrayList) ? "list is ArrayList"
+                        : "list not ArrayList?");
+
+        KryoThreadLocalSer.getInstance().ObjDeserialize( KryoThreadLocalSer.getInstance().ObjSerialize(stringList));
+
+
     }
 
 
@@ -148,32 +176,5 @@ public class Test {
         springContext.close();
     }
 
-
-    public static void main(String[] args) throws Exception {
-
-        List<String> list = Arrays.asList("");
-
-        List<String> stringList = new ArrayList<String>();
-
-
-//        JRedisSerializationUtils.fastDeserialize(JRedisSerializationUtils.fastSerialize(list));
-//
-//        JRedisSerializationUtils.kryoDeserialize(JRedisSerializationUtils.kryoSerialize(list));
-
-
-        System.out.println
-                ((list instanceof ArrayList) ? "list is ArrayList"
-                        : "list not ArrayList?");
-
-        System.out.println
-                ((stringList instanceof ArrayList) ? "list is ArrayList"
-                        : "list not ArrayList?");
-
-        KryoThreadLocalSer.getInstance().ObjDeserialize( KryoThreadLocalSer.getInstance().ObjSerialize(stringList));
-
-
-
-
-    }
 
 }

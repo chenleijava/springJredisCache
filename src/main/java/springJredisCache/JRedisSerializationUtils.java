@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2013.
- *  游戏服务器核心代码编写人陈磊拥有使用权
- *  联系方式：E-mail:13638363871@163.com ;qq:502959937
- *  个人博客主页：http://my.oschina.net/chenleijava
+ * Copyright (c) 2014.  @石头哥哥
+ * THIS SOFTWARE IS PROVIDED BY THE FREEBSD PROJECT ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 package springJredisCache;
@@ -19,6 +17,7 @@ import javolution.util.FastTable;
 import org.msgpack.MessagePack;
 import org.nustaq.serialization.FSTObjectInput;
 import org.nustaq.serialization.FSTObjectOutput;
+import springJredisCache.Serializations.KryoThreadLocalSer;
 
 import java.io.*;
 
@@ -31,13 +30,19 @@ import java.io.*;
  *         Comment： 对象序列化工具类    序列化方案基于 FST - Fast Serialization
  *         https://github.com/flapdoodle-oss/de.flapdoodle.fast-serialization
  *         <p/>
+ *
+ *          cache utils
+ *
  */
+
 public class JRedisSerializationUtils {
 
 
     public JRedisSerializationUtils() {
     }
 
+
+    protected static  boolean useKryoPool=false;
 
     // Serialize
     //-----------------------------------------------------------------------
@@ -250,19 +255,25 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static byte[] kryoSerialize(Object obj) throws JRedisCacheException {
-        KryoHolder kryoHolder = null;
-        if (obj == null) throw new JRedisCacheException("obj can not be null");
-        try {
-            kryoHolder = KryoPoolImpl.getInstance().get();
-            kryoHolder.output.clear();  //clear Output    -->每次调用的时候  重置
-            kryoHolder.kryo.writeClassAndObject(kryoHolder.output, obj);
-            return kryoHolder.output.toBytes();// 无法避免拷贝  ~~~
-        } catch (JRedisCacheException e) {
-            throw new JRedisCacheException("Serialize obj exception");
-        } finally {
-            KryoPoolImpl.getInstance().offer(kryoHolder);
-            obj = null; //GC
+
+        if (useKryoPool){
+            KryoHolder kryoHolder = null;
+            if (obj == null) throw new JRedisCacheException("obj can not be null");
+            try {
+                kryoHolder = KryoPoolImpl.getInstance().get();
+                kryoHolder.output.clear();  //clear Output    -->每次调用的时候  重置
+                kryoHolder.kryo.writeClassAndObject(kryoHolder.output, obj);
+                return kryoHolder.output.toBytes();// 无法避免拷贝  ~~~
+            } catch (JRedisCacheException e) {
+                throw new JRedisCacheException("Serialize obj exception");
+            } finally {
+                KryoPoolImpl.getInstance().offer(kryoHolder);
+                obj = null; //GC
+            }
+        }else {
+            return KryoThreadLocalSer.getInstance().ObjSerialize(obj);
         }
+
     }
 
 
@@ -274,18 +285,23 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
-        KryoHolder kryoHolder = null;
-        if (bytes == null) throw new JRedisCacheException("bytes can not be null");
-        try {
-            kryoHolder = KryoPoolImpl.getInstance().get();
-            kryoHolder.input.setBuffer(bytes, 0, bytes.length);//call it ,and then use input object  ,discard any array
-            return kryoHolder.kryo.readClassAndObject(kryoHolder.input);
-        } catch (JRedisCacheException e) {
-            throw new JRedisCacheException("Deserialize bytes exception");
-        } finally {
-            KryoPoolImpl.getInstance().offer(kryoHolder);
-            bytes = null;       //  for gc
+        if (useKryoPool){
+            KryoHolder kryoHolder = null;
+            if (bytes == null) throw new JRedisCacheException("bytes can not be null");
+            try {
+                kryoHolder = KryoPoolImpl.getInstance().get();
+                kryoHolder.input.setBuffer(bytes, 0, bytes.length);//call it ,and then use input object  ,discard any array
+                return kryoHolder.kryo.readClassAndObject(kryoHolder.input);
+            } catch (JRedisCacheException e) {
+                throw new JRedisCacheException("Deserialize bytes exception");
+            } finally {
+                KryoPoolImpl.getInstance().offer(kryoHolder);
+                bytes = null;       //  for gc
+            }
+        }else {
+            return KryoThreadLocalSer.getInstance().ObjDeserialize(bytes);
         }
+
     }
 
 

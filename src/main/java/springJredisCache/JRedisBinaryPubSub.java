@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2014.  @石头哥哥
+ * THIS SOFTWARE IS PROVIDED BY THE FREEBSD PROJECT ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package springJredisCache;
 
 import org.springframework.stereotype.Service;
@@ -19,15 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *         subsribe(一般模式设置频道)和psubsribe(使用模式匹配来设置频道)。不管是那种模式都可以设置个数不定的频道
  *         <p/>
  *         <p/>
- *         订阅的监听类  ，订阅某个事件  那么会一直在
- *         {@link redis.clients.jedis.BinaryJedisPubSub#process(redis.clients.jedis.Client)} }轮询
- *         直到有订阅的消息发生（注册事件---这里  主要是只channel （或者通配符的表达式）） ，
- *         当然可以订阅 也可以取消  在   onUnsubscribe(byte[] channel, int subscribedChannels) 或则  onPUnsubscribe(byte[] pattern, int subscribedChannels)
- *         中处理取消订阅    ,  当取消一个订阅的时候 subscribedChannels 订阅的计数会减一  直到<=0   ----注意是来子redis的数据哈
- *         {@link redis.clients.jedis.BinaryJedisPubSub#isSubscribed()} }返回false 停止轮询  ！
- *         其中 channel订阅的等价 redis存储的 key
- *         message 等价redis存储的value
- *         为什么叫channel  或许是形象罢了        自己体会 订阅/发布
+ *         订阅的监听类  ，订阅某个事件
  */
 @Service
 public class JRedisBinaryPubSub extends BinaryJedisPubSub {

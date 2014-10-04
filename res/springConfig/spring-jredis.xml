@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2013.
-  ~  游戏服务器核心代码编写人陈磊拥有使用权
-  ~  联系方式：E-mail:13638363871@163.com ;qq:502959937
-  ~  个人博客主页：http://my.oschina.net/chenleijava
+  ~ Copyright (c) 2014.  @石头哥哥
+  ~ THIS SOFTWARE IS PROVIDED BY THE FREEBSD PROJECT ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -27,7 +25,6 @@
         <constructor-arg index="1" value="${jredis.master.ip}"/>
         <constructor-arg index="2" value="${jredis.master.port}"/>
         <constructor-arg index="3" value="${jredis.master.timeout}"/>
-        <constructor-arg index="4" value="${jredis.master.password}"/>
     </bean>
 
 
@@ -39,15 +36,11 @@
                     <constructor-arg index="0" value="${jredis.master.ip}"/>
                     <constructor-arg index="1" value="${jredis.master.port}"/>
                     <constructor-arg index="2" value="${jredis.master.timeout}"/>
-                    <constructor-arg index="3" value="${jredis.master.weight}"/>
-                    <property name="password" value="${jredis.master.password}"/>
                 </bean>
                 <bean class="redis.clients.jedis.JedisShardInfo">
                     <constructor-arg index="0" value="${jredis.slave.ip}"/>
                     <constructor-arg index="1" value="${jredis.slave.port}"/>
                     <constructor-arg index="2" value="${jredis.slave.timeout}"/>
-                    <constructor-arg index="3" value="${jredis.slave.weight}"/>
-                    <property name="password" value="${jredis.slave.password}"/>
                 </bean>
             </list>
         </constructor-arg>

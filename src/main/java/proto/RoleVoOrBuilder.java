@@ -3,10 +3,10 @@
 
 package proto;
 
-public interface RoleVoOrBuilder
-    extends com.google.protobuf.MessageOrBuilder {
+public interface RoleVoOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:proto.RoleVo)
+    com.google.protobuf.MessageOrBuilder {
 
-  // required uint32 roleID = 1;
   /**
    * <code>required uint32 roleID = 1;</code>
    *
@@ -24,7 +24,6 @@ public interface RoleVoOrBuilder
    */
   int getRoleID();
 
-  // optional string roleName = 2;
   /**
    * <code>optional string roleName = 2;</code>
    *
@@ -51,7 +50,6 @@ public interface RoleVoOrBuilder
   com.google.protobuf.ByteString
       getRoleNameBytes();
 
-  // optional uint32 roleSex = 3;
   /**
    * <code>optional uint32 roleSex = 3;</code>
    *

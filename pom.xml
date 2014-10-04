@@ -33,6 +33,11 @@
             </snapshots>
         </repository>
         <repository>
+            <id>sonatype-snapshots</id>
+            <name>sonatype snapshots repo</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+        <repository>
             <id>releases</id>
             <url>http://127.0.0.1:8081/nexus/content/repositories/releases</url>
         </repository>

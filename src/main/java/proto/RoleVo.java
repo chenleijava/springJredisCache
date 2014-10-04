@@ -10,9 +10,10 @@ package proto;
  * 角色vo      change!!!
  * </pre>
  */
-public  final class RoleVo extends
-    com.google.protobuf.GeneratedMessage
-    implements RoleVoOrBuilder {
+public final class RoleVo extends
+    com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:proto.RoleVo)
+    RoleVoOrBuilder {
   // Use RoleVo.newBuilder() to construct.
   private RoleVo(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
     super(builder);
@@ -64,8 +65,9 @@ public  final class RoleVo extends
             break;
           }
           case 18: {
+            com.google.protobuf.ByteString bs = input.readBytes();
             bitField0_ |= 0x00000002;
-            roleName_ = input.readBytes();
+            roleName_ = bs;
             break;
           }
           case 24: {
@@ -113,7 +115,6 @@ public  final class RoleVo extends
   }
 
   private int bitField0_;
-  // required uint32 roleID = 1;
   public static final int ROLEID_FIELD_NUMBER = 1;
   private int roleID_;
   /**
@@ -137,7 +138,6 @@ public  final class RoleVo extends
     return roleID_;
   }
 
-  // optional string roleName = 2;
   public static final int ROLENAME_FIELD_NUMBER = 2;
   private java.lang.Object roleName_;
   /**
@@ -192,7 +192,6 @@ public  final class RoleVo extends
     }
   }
 
-  // optional uint32 roleSex = 3;
   public static final int ROLESEX_FIELD_NUMBER = 3;
   private int roleSex_;
   /**
@@ -224,7 +223,8 @@ public  final class RoleVo extends
   private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
-    if (isInitialized != -1) return isInitialized == 1;
+    if (isInitialized == 1) return true;
+    if (isInitialized == 0) return false;
 
     if (!hasRoleID()) {
       memoizedIsInitialized = 0;
@@ -353,8 +353,9 @@ public  final class RoleVo extends
    * </pre>
    */
   public static final class Builder extends
-      com.google.protobuf.GeneratedMessage.Builder<Builder>
-     implements proto.RoleVoOrBuilder {
+      com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+      // @@protoc_insertion_point(builder_implements:proto.RoleVo)
+      proto.RoleVoOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return proto.ProtoFile.internal_static_proto_RoleVo_descriptor;
@@ -491,7 +492,6 @@ public  final class RoleVo extends
     }
     private int bitField0_;
 
-    // required uint32 roleID = 1;
     private int roleID_ ;
     /**
      * <code>required uint32 roleID = 1;</code>
@@ -540,7 +540,6 @@ public  final class RoleVo extends
       return this;
     }
 
-    // optional string roleName = 2;
     private java.lang.Object roleName_ = "";
     /**
      * <code>optional string roleName = 2;</code>
@@ -562,9 +561,12 @@ public  final class RoleVo extends
     public java.lang.String getRoleName() {
       java.lang.Object ref = roleName_;
       if (!(ref instanceof java.lang.String)) {
-        java.lang.String s = ((com.google.protobuf.ByteString) ref)
-            .toStringUtf8();
-        roleName_ = s;
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          roleName_ = s;
+        }
         return s;
       } else {
         return (java.lang.String) ref;
@@ -638,7 +640,6 @@ public  final class RoleVo extends
       return this;
     }
 
-    // optional uint32 roleSex = 3;
     private int roleSex_ ;
     /**
      * <code>optional uint32 roleSex = 3;</code>

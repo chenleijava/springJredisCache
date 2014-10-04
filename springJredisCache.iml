@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
-    <facet type="Spring" name="Spring">
-      <configuration>
-        <fileset id="fileset" name="Spring Application Context" removed="false">
-          <file>file://$MODULE_DIR$/res/springConfig/spring-context.xml</file>
-          <file>file://$MODULE_DIR$/res/springConfig/spring-jredis.xml</file>
-        </fileset>
-      </configuration>
-    </facet>
     <facet type="protobuf" name="Protobuf Facet">
       <configuration>
         <option name="COMPILER_OUTPUT_SOURCE_DIRECTORY" value="$MODULE_DIR$/src/main/java" />
+      </configuration>
+    </facet>
+    <facet type="Spring" name="Spring">
+      <configuration>
+        <fileset id="fileset" name="Spring Application Context" removed="false">
+          <file>file://$MODULE_DIR$/res/springConfig/spring-jredis.xml</file>
+          <file>file://$MODULE_DIR$/res/springConfig/spring-context.xml</file>
+        </fileset>
       </configuration>
     </facet>
   </component>
@@ -23,7 +23,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.springframework:spring-beans:4.0.6.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-core:4.0.6.RELEASE" level="project" />

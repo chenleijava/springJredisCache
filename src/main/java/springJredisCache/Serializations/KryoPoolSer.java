@@ -37,7 +37,6 @@ public class KryoPoolSer {
 
         KryoHolder(Kryo kryo) {
             this.kryo = kryo;
-            this.kryo.setReferences(false);
 
             //   register
             this.kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer());

@@ -8,8 +8,15 @@ package springJredisCache.Serializations;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import de.javakaffee.kryoserializers.*;
+import de.javakaffee.kryoserializers.cglib.CGLibProxySerializer;
 import javolution.util.FastTable;
 import springJredisCache.JRedisCacheException;
+
+import java.lang.reflect.InvocationHandler;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.GregorianCalendar;
 
 /**
  * Created by chenlei on 14-10-4.
@@ -30,6 +37,30 @@ public class KryoPoolSer {
 
         KryoHolder(Kryo kryo) {
             this.kryo = kryo;
+            this.kryo.setReferences(false);
+
+            //   register
+            this.kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer());
+            this.kryo.register(Collections.EMPTY_LIST.getClass(), new CollectionsEmptyListSerializer());
+            this.kryo.register(Collections.EMPTY_MAP.getClass(), new CollectionsEmptyMapSerializer());
+            this.kryo.register(Collections.EMPTY_SET.getClass(), new CollectionsEmptySetSerializer());
+            this.kryo.register(Collections.singletonList("").getClass(), new CollectionsSingletonListSerializer());
+            this.kryo.register(Collections.singleton("").getClass(), new CollectionsSingletonSetSerializer());
+            this.kryo.register(Collections.singletonMap("", "").getClass(), new CollectionsSingletonMapSerializer());
+            this.kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer());
+            this.kryo.register(InvocationHandler.class, new JdkProxySerializer());
+            // register CGLibProxySerializer, works in combination with the appropriate action in handleUnregisteredClass (see below)
+            this.kryo.register(CGLibProxySerializer.CGLibProxyMarker.class, new CGLibProxySerializer());
+            UnmodifiableCollectionsSerializer.registerSerializers(this.kryo);
+            SynchronizedCollectionsSerializer.registerSerializers(this.kryo);
+
+            //其他第三方
+//        // joda datetime
+//        kryo.register(DateTime.class, new JodaDateTimeSerializer());
+//        // wicket
+//        kryo.register(MiniMap.class, new MiniMapSerializer());
+//        // guava ImmutableList
+//        ImmutableListSerializer.registerSerializers(kryo);
         }
 
 
@@ -137,7 +168,7 @@ public class KryoPoolSer {
      * @return 字节数组
      * @throws springJredisCache.JRedisCacheException
      */
-    public  byte[] ObjSerialize(Object obj){
+    public byte[] ObjSerialize(Object obj) {
         KryoHolder kryoHolder = null;
         if (obj == null) throw new JRedisCacheException("obj can not be null");
         try {
@@ -161,7 +192,7 @@ public class KryoPoolSer {
      * @return object
      * @throws JRedisCacheException
      */
-    public  Object ObjDeserialize(byte[] bytes) throws JRedisCacheException {
+    public Object ObjDeserialize(byte[] bytes) throws JRedisCacheException {
         KryoHolder kryoHolder = null;
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
@@ -184,7 +215,7 @@ public class KryoPoolSer {
      * @return object
      * @throws JRedisCacheException
      */
-    public  Object kryoDeserialize(byte[] bytes,int length) throws JRedisCacheException {
+    public Object kryoDeserialize(byte[] bytes, int length) throws JRedisCacheException {
         KryoHolder kryoHolder = null;
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {

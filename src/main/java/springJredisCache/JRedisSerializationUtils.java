@@ -13,6 +13,8 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistryLite;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
+import de.javakaffee.kryoserializers.*;
+import de.javakaffee.kryoserializers.cglib.CGLibProxySerializer;
 import javolution.util.FastTable;
 import org.msgpack.MessagePack;
 import org.nustaq.serialization.FSTObjectInput;
@@ -20,6 +22,10 @@ import org.nustaq.serialization.FSTObjectOutput;
 import springJredisCache.Serializations.KryoThreadLocalSer;
 
 import java.io.*;
+import java.lang.reflect.InvocationHandler;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.GregorianCalendar;
 
 /**
  * @author 石头哥哥 </br>
@@ -30,9 +36,8 @@ import java.io.*;
  *         Comment： 对象序列化工具类    序列化方案基于 FST - Fast Serialization
  *         https://github.com/flapdoodle-oss/de.flapdoodle.fast-serialization
  *         <p/>
- *
- *          cache utils
- *
+ *         <p/>
+ *         cache utils
  */
 
 public class JRedisSerializationUtils {
@@ -42,7 +47,7 @@ public class JRedisSerializationUtils {
     }
 
 
-    protected static  boolean useKryoPool=false;
+    protected static boolean useKryoPool = false;
 
     // Serialize
     //-----------------------------------------------------------------------
@@ -141,15 +146,30 @@ public class JRedisSerializationUtils {
 
         KryoHolder(Kryo kryo) {
             this.kryo = kryo;
+            this.kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer());
+            this.kryo.register(Collections.EMPTY_LIST.getClass(), new CollectionsEmptyListSerializer());
+            this.kryo.register(Collections.EMPTY_MAP.getClass(), new CollectionsEmptyMapSerializer());
+            this.kryo.register(Collections.EMPTY_SET.getClass(), new CollectionsEmptySetSerializer());
+            this.kryo.register(Collections.singletonList("").getClass(), new CollectionsSingletonListSerializer());
+            this.kryo.register(Collections.singleton("").getClass(), new CollectionsSingletonSetSerializer());
+            this.kryo.register(Collections.singletonMap("", "").getClass(), new CollectionsSingletonMapSerializer());
+            this.kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer());
+            this.kryo.register(InvocationHandler.class, new JdkProxySerializer());
+            // register CGLibProxySerializer, works in combination with the appropriate action in handleUnregisteredClass (see below)
+            this.kryo.register(CGLibProxySerializer.CGLibProxyMarker.class, new CGLibProxySerializer());
+            UnmodifiableCollectionsSerializer.registerSerializers(this.kryo);
+            SynchronizedCollectionsSerializer.registerSerializers(this.kryo);
+
+
+            //其他第三方
+//        // joda datetime
+//        kryo.register(DateTime.class, new JodaDateTimeSerializer());
+//        // wicket
+//        kryo.register(MiniMap.class, new MiniMapSerializer());
+//        // guava ImmutableList
+//        ImmutableListSerializer.registerSerializers(kryo);
         }
 
-        /**
-         * @param kryo
-         * @param clazz
-         */
-        private static void checkRegiterNeeded(Kryo kryo, Class<?> clazz) {
-            kryo.register(clazz);
-        }
     }
 
 
@@ -256,7 +276,7 @@ public class JRedisSerializationUtils {
      */
     public static byte[] kryoSerialize(Object obj) throws JRedisCacheException {
 
-        if (useKryoPool){
+        if (useKryoPool) {
             KryoHolder kryoHolder = null;
             if (obj == null) throw new JRedisCacheException("obj can not be null");
             try {
@@ -270,7 +290,7 @@ public class JRedisSerializationUtils {
                 KryoPoolImpl.getInstance().offer(kryoHolder);
                 obj = null; //GC
             }
-        }else {
+        } else {
             return KryoThreadLocalSer.getInstance().ObjSerialize(obj);
         }
 
@@ -285,7 +305,7 @@ public class JRedisSerializationUtils {
      * @throws JRedisCacheException
      */
     public static Object kryoDeserialize(byte[] bytes) throws JRedisCacheException {
-        if (useKryoPool){
+        if (useKryoPool) {
             KryoHolder kryoHolder = null;
             if (bytes == null) throw new JRedisCacheException("bytes can not be null");
             try {
@@ -298,7 +318,7 @@ public class JRedisSerializationUtils {
                 KryoPoolImpl.getInstance().offer(kryoHolder);
                 bytes = null;       //  for gc
             }
-        }else {
+        } else {
             return KryoThreadLocalSer.getInstance().ObjDeserialize(bytes);
         }
 
@@ -312,7 +332,7 @@ public class JRedisSerializationUtils {
      * @return object
      * @throws JRedisCacheException
      */
-    public static Object kryoDeserialize(byte[] bytes,int length) throws JRedisCacheException {
+    public static Object kryoDeserialize(byte[] bytes, int length) throws JRedisCacheException {
         KryoHolder kryoHolder = null;
         if (bytes == null) throw new JRedisCacheException("bytes can not be null");
         try {
@@ -462,6 +482,7 @@ public class JRedisSerializationUtils {
 
 
     //jdk原生序列换方案
+
     /**
      * @param obj
      * @return

@@ -61,7 +61,7 @@ public class Test {
                 ((stringList instanceof ArrayList) ? "list is ArrayList"
                         : "list not ArrayList?");
 
-        KryoThreadLocalSer.getInstance().ObjDeserialize( KryoThreadLocalSer.getInstance().ObjSerialize(stringList));
+        KryoThreadLocalSer.getInstance().ObjDeserialize( KryoThreadLocalSer.getInstance().ObjSerialize(list));
 
 
     }
